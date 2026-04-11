@@ -1,11 +1,10 @@
 // DeckView.jsx
-// Displays all flashcards belonging to a single deck and provides full CRUD
-// for those cards. Deck metadata (name, description) is fetched separately from
-// the card list so both can be shown independently. Cards are managed through
-// the useCards hook which keeps local state in sync with the API. A shared
-// modal handles both "create" and "edit" flows depending on whether an existing
-// card is passed to it. Card content (question/answer) is rich HTML produced by
-// the TipTap editor and submitted via multipart FormData to support optional
+
+// This file displays all flashcards belonging to a single deck and provides full CRUD
+// for those cards. Cards are managed through // the useCards hook which keeps local
+// state in sync with the API. A shared modal dialog box handles both "create" and "edit"
+// operations depending on whether an existing card is passed to it. Card content
+// (question/answer) uses rich HTML produced by the TipTap editor. Support optional
 // image uploads alongside text.
 
 import { useState, useEffect } from 'react'
@@ -21,8 +20,8 @@ export default function DeckView() {
   // deckId comes from the URL parameter (e.g. /decks/3)
   const { deckId } = useParams()
 
-  // useCards manages the card array and exposes CRUD helpers that update both
-  // the API and local state. deckId is coerced to a Number because URL params
+  // useCards manages the card array and supports the CRUD helpers that update both
+  // the API and local state. deckId is tied to a Number because URL params
   // are always strings.
   const { cards, loading, addCard, editCard, removeCard } = useCards(Number(deckId))
 
@@ -33,12 +32,12 @@ export default function DeckView() {
   // Controls visibility of the create/edit modal.
   const [showModal, setShowModal] = useState(false)
 
-  // When non-null, the modal is in "edit" mode for this specific card object.
-  // When null, the modal is in "create" mode.
+  // When the user is editing, the modal is in "edit" mode for this specific card
+  // object. When the "edit" state is set to null, the modal is in "create" mode.
   const [editingCard, setEditingCard] = useState(null)
 
-  // Holds the card object that the user has clicked "delete" on. A non-null
-  // value causes the confirmation modal to render.
+  // Holds the card object that the user has clicked on the "delete" button.
+  // A non-null value causes the confirmation modal to render.
   const [deletingCard, setDeletingCard] = useState(null)
 
   // Controlled form state shared between create and edit flows.
@@ -50,9 +49,10 @@ export default function DeckView() {
     getDeck(deckId).then(setDeck).catch(() => showToast('Failed to load deck', 'error'))
   }, [deckId])
 
-  // Opens the create/edit modal. When called with an existing card object the
-  // form is pre-populated with that card's current content; called with no
-  // argument (or null) it resets the form for a new card.
+  // Opens the create/edit modal. When the user edits an existing card object, the
+  // form is filled with that card's current content. Otherwise, when called with no
+  // argument (no card object is involved here), it resets the form for
+  // a new card.
   const openModal = (card = null) => {
     setEditingCard(card)
     setForm(card ? { question: card.question, answer: card.answer, image: null } : { question: '', answer: '', image: null })
@@ -60,7 +60,7 @@ export default function DeckView() {
   }
 
   const saveCard = async () => {
-    // The backend expects multipart/form-data so that the optional image file
+    // Use a form-data here so that the optional image file
     // can be included alongside the text fields in a single request.
     const fd = new FormData()
     fd.append('question', form.question)
@@ -71,23 +71,23 @@ export default function DeckView() {
     try {
       if (editingCard) {
         await editCard(editingCard.id, fd)
-        showToast('Card updated')
+        showToast('Your card has been successfully updated.')
       } else {
         await addCard(fd)
-        showToast('Card created')
+        showToast('Your card has been successfully created')
       }
       setShowModal(false)
     } catch {
-      showToast('Failed to save card', 'error')
+      showToast('Failed to save your card.', 'error')
     }
   }
 
   const confirmDelete = async () => {
     try {
       await removeCard(deletingCard.id)
-      showToast('Card deleted')
+      showToast('Your card has been successfully deleted.')
     } catch {
-      showToast('Failed to delete card', 'error')
+      showToast('Failed to delete your card.', 'error')
     }
     // Clear deletingCard regardless of success/failure to close the modal.
     setDeletingCard(null)
@@ -98,7 +98,7 @@ export default function DeckView() {
       <div className="page-header">
         <div>
           <Link to="/" className="breadcrumb">← Decks</Link>
-          {/* Show a loading placeholder in the heading until the deck fetch resolves. */}
+          {/* Show a loading placeholder in the heading until the deck fetch finishes. */}
           <h1>{deck?.name ?? 'Loading…'}</h1>
           {/* Only render the description paragraph if the deck has one. */}
           {deck?.description && <p className="deck-desc">{deck.description}</p>}
@@ -106,7 +106,7 @@ export default function DeckView() {
         <div className="page-header-actions">
           <Link to={`/decks/${deckId}/dashboard`} className="btn btn-secondary">📈 Dashboard</Link>
           <Link to={`/decks/${deckId}/study`} className="btn btn-primary">▶ Study</Link>
-          {/* Calling openModal() with no argument opens the modal in create mode. */}
+          {/* Calling openModal() with no argument to open the modal in "create" mode. */}
           <button className="btn btn-secondary" onClick={() => openModal()}>+ Add Card</button>
         </div>
       </div>
@@ -114,7 +114,7 @@ export default function DeckView() {
       <div className="card-grid">
         {loading
           // While cards are loading, render 3 skeleton placeholders to prevent
-          // layout shift and give the user visual feedback.
+          // layout messing-ups and give the user visual feedback.
           ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
           : cards.map(card => (
               <div key={card.id} className="flashcard-preview">
@@ -132,9 +132,9 @@ export default function DeckView() {
                 <div className="flashcard-a" dangerouslySetInnerHTML={{ __html: card.answer }} />
                 {/* Cumulative rating counts from all past study sessions. */}
                 <div className="flashcard-stats">
-                  <span title="Easy">✅ {card.ease_count}</span>
-                  <span title="Hard">😰 {card.hard_count}</span>
-                  <span title="Missed">❌ {card.missed_count}</span>
+                  <span title="Easy">{card.ease_count}</span>
+                  <span title="Hard">{card.hard_count}</span>
+                  <span title="Missed">{card.missed_count}</span>
                 </div>
                 <div className="flashcard-actions">
                   {/* Pass the full card object to openModal so the form is pre-filled. */}
@@ -146,11 +146,11 @@ export default function DeckView() {
               </div>
             ))}
         {!loading && cards.length === 0 && (
-          <p className="empty-state">No cards yet. Add one to get started!</p>
+          <p className="empty-state">This deck has no cards yet. Add one to get started!</p>
         )}
       </div>
 
-      {/* Create / edit modal — rendered only when showModal is true.
+      {/* Create / edit modal — rendered only when showModal is set to true.
           The title and confirm button label adapt based on whether editingCard is set. */}
       {showModal && (
         <Modal
@@ -161,7 +161,7 @@ export default function DeckView() {
         >
           <label className="form-label">Question *</label>
           {/* Functional state update (f => ...) prevents stale closure issues
-              when the Editor's onChange fires mid-render cycle. */}
+              when the Editor's onChange is triggered admist a render cycle. */}
           <Editor content={form.question} onChange={q => setForm(f => ({ ...f, question: q }))} />
           <label className="form-label">Answer *</label>
           <Editor content={form.answer} onChange={a => setForm(f => ({ ...f, answer: a }))} />
@@ -175,7 +175,7 @@ export default function DeckView() {
       {/* Delete confirmation modal — rendered only when a card is staged for deletion. */}
       {deletingCard && (
         <Modal title="Delete Card" onClose={() => setDeletingCard(null)} onConfirm={confirmDelete} confirmLabel="Delete" danger>
-          <p>Permanently delete this card?</p>
+          <p>Are you sure you want to permanently delete this card?</p>
         </Modal>
       )}
     </div>

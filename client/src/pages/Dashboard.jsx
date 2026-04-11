@@ -1,9 +1,12 @@
 // Dashboard.jsx
-// Progress dashboard for a single deck. Fetches deck metadata, all flashcards,
-// and study session history in parallel, then derives mastery statistics from
-// the cumulative ease/hard/missed counts stored on each card. Displays an
-// overall mastery percentage, a visual progress bar, session history, and the
-// top-5 hardest and easiest cards ranked by their miss and easy counts.
+
+// Creates a progress dashboard for a single deck. Fetches deck metadata, all flashcards,
+// and study session history, and displays an overall mastery percentage, a visual
+// progress bar, session history, and the top-5 hardest and easiest cards ranked by their
+// miss and easy counts.
+
+// For this file's logic I used Claude Code to figure out the mathematic formula used to
+// summarise user's study performance.
 
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
@@ -18,8 +21,8 @@ export default function Dashboard() {
   const [cards, setCards] = useState([])
   const [sessions, setSessions] = useState([])
 
-  // Fetch all three data sources simultaneously so the page loads in a single
-  // round-trip rather than three sequential requests.
+  // Fetch all three data sources simultaneously so the page loads all these sources
+  // together rather than three separate requests one after another
   useEffect(() => {
     Promise.all([getDeck(deckId), getCards(deckId), getSessions(deckId)])
       .then(([d, c, s]) => { setDeck(d); setCards(c); setSessions(s) })
@@ -33,12 +36,13 @@ export default function Dashboard() {
   // Sum only the "easy" ratings — these are the numerator for mastery.
   const totalEasy = cards.reduce((sum, c) => sum + c.ease_count, 0)
 
-  // Mastery % = easy ratings / all ratings × 100. Guard against division by
-  // zero when no cards have been rated yet.
+  // Mastery Percentage is calculated by this formula:
+  // easy ratings / all ratings × 100. We also prevent the division-by-zero issue
+  // when no cards have been rated yet.
   const mastery = totalRatings > 0 ? Math.round((totalEasy / totalRatings) * 100) : 0
 
-  // Sort a shallow copy (spread avoids mutating state) by missed_count descending
-  // and keep only the five cards the user struggles with most.
+  // Sort by missed_count descending and keep only the five cards the user
+  // misses the most.
   const hardestCards = [...cards].sort((a, b) => b.missed_count - a.missed_count).slice(0, 5)
 
   // Same approach but sorted by ease_count descending for the five easiest cards.
@@ -64,10 +68,10 @@ export default function Dashboard() {
             <div className="mastery-fill" style={{ width: `${mastery}%` }} />
           </div>
           <div className="mastery-breakdown">
-            <span>✅ {totalEasy} easy</span>
+            <span>{totalEasy} easy</span>
             {/* Inline reduces here because these totals aren't needed elsewhere. */}
-            <span>😰 {cards.reduce((s, c) => s + c.hard_count, 0)} hard</span>
-            <span>❌ {cards.reduce((s, c) => s + c.missed_count, 0)} missed</span>
+            <span>{cards.reduce((s, c) => s + c.hard_count, 0)} hard</span>
+            <span>{cards.reduce((s, c) => s + c.missed_count, 0)} missed</span>
           </div>
         </div>
 
@@ -104,7 +108,7 @@ export default function Dashboard() {
                   with dangerouslySetInnerHTML — content originates from the
                   user's own input, not external sources. */}
               <span dangerouslySetInnerHTML={{ __html: c.question }} className="card-stat-q" />
-              <span>❌ {c.missed_count}</span>
+              <span>{c.missed_count}</span>
             </div>
           ))}
         </div>
@@ -115,7 +119,7 @@ export default function Dashboard() {
           {easiestCards.map(c => (
             <div key={c.id} className="card-stat-row">
               <span dangerouslySetInnerHTML={{ __html: c.question }} className="card-stat-q" />
-              <span>✅ {c.ease_count}</span>
+              <span>{c.ease_count}</span>
             </div>
           ))}
         </div>

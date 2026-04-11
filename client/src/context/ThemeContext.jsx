@@ -1,3 +1,6 @@
+// ThemeContext.jsx
+// This file oversees the global light/dark theme configuration.
+
 import { createContext, useContext, useEffect, useState } from 'react'
 
 const ThemeContext = createContext(null)

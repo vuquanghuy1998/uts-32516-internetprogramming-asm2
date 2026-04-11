@@ -1,15 +1,17 @@
 // StudyMode.jsx
-// Drives an interactive flashcard study session for a single deck. The page
-// has three sequential screens: a pre-session setup screen (shuffle toggle +
+
+// This file creates an interactive flashcard study session for a single deck. The page
+// has three sequential screens: a pre-session setup screen (shuffle toggle button +
 // start button), the active study screen (live stats dashboard, flippable card,
 // and rating buttons), and a post-session summary screen (final stats + save).
 //
-// Session queue logic lives entirely in useStudySession — this component only
+// Session queue logic lives entirely in useStudySession — this file only
 // renders its output and routes user actions (flip, rate, end) back into it.
 // Keyboard shortcuts (Space, 1/2/3, Escape) are registered globally while a
 // session is active and cleaned up on unmount via the useEffect return value.
 // Stats are persisted to the database only when the user explicitly clicks
-// "Save & Exit"; clicking "Exit Without Saving" skips the API call entirely.
+// "Save & Exit"; clicking "Exit Without Saving" skips the API call and no data
+// is written permanently to the database.
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -27,10 +29,10 @@ export default function StudyMode() {
   // Whether the user has opted to randomise card order before starting.
   const [shuffled, setShuffled] = useState(false)
 
-  // Gates which screen is shown. False = pre-session setup screen.
+  // Gates which screen is shown. False = display the pre-session setup screen.
   const [started, setStarted] = useState(false)
 
-  // Prevents double-submission while the save API call is in-flight.
+  // This state helps prevents double-submission while the save API call is in-flight.
   const [saving, setSaving] = useState(false)
 
   // Fetch all cards for this deck so their count can be shown on the setup
@@ -40,7 +42,7 @@ export default function StudyMode() {
   }, [deckId])
 
   // Pass an empty array before the session starts so the hook initialises
-  // with no queue — avoids building then discarding a queue before the user
+  // with no queue. This is tp avoid building then discarding a queue before the user
   // has chosen whether to shuffle.
   const session = useStudySession(started ? cards : [], shuffled)
 
@@ -75,8 +77,8 @@ export default function StudyMode() {
   const handleSaveAndExit = async () => {
     setSaving(true)
     try {
-      // Re-derive accuracy here rather than relying on session.accuracy so the
-      // value saved to the DB matches the final state at the moment of saving.
+      // Re-calculate accuracy here rather than relying on session.accuracy so the
+      // value saved to the DB matches the final accuracy stats at the moment of saving.
       const accuracy = session.stats.totalRated > 0
         ? Math.round((session.stats.easy / session.stats.totalRated) * 100)
         : 0
@@ -161,14 +163,14 @@ export default function StudyMode() {
         <button className="btn btn-secondary btn-sm" onClick={handleEndSession}>End</button>
       </div>
 
-      {/* Render the flippable card for the current queue position. Guard against
-          undefined in case the queue transitions to empty between renders. */}
+      {/* Render the flippable card for the current queue position. Also prevents
+          undefined value in case the queue transitions to empty between renders. */}
       {session.currentCard && (
         <CardFlip card={session.currentCard} isFlipped={session.isFlipped} onFlip={session.flip} />
       )}
 
       {/* Rating buttons appear only after the card has been flipped to show the
-          answer — ensures the user rates honestly rather than pre-emptively. */}
+          answer to ensure correct stats. */}
       {session.isFlipped && (
         <div className="rating-buttons">
           <button className="btn btn-missed" onClick={() => session.rate('missed')}>

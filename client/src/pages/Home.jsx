@@ -1,6 +1,7 @@
 // Home.jsx
-// The main landing page of the app. Displays all decks in a grid and lets the
-// user filter them by category. Manages full CRUD for both decks and categories
+
+// This file renders the main landing page of the app. Displays all decks in a grid and
+// lets the user filter them by category. Manages full CRUD for both decks and categories
 // through a shared modal pattern: a single modal component is reused for both
 // "create" and "edit" flows by toggling its title, confirm label, and pre-filled
 // form values based on whether an existing item was passed to the open handler.
@@ -18,16 +19,17 @@ import { SkeletonCard } from '../components/Skeleton/Skeleton'
 import { showToast } from '../components/Toast/Toast'
 
 export default function Home() {
-  // useDecks fetches all decks on mount and exposes CRUD helpers that keep
+  // useDecks fetches all decks on mount and features CRUD helpers that keep
   // both the API and local state in sync.
   const { decks, loading, addDeck, editDeck, removeDeck, cloneDeck } = useDecks()
 
   const [categories, setCategories] = useState([])
 
-  // null means "show all decks"; a category id means "show only that category".
+  // Filtering the categories. null means "show all decks"; a category id means
+  // "show only that category".
   const [filterCat, setFilterCat] = useState(null)
 
-  // Separate modal visibility flags for decks and categories so both modals
+  // Separate modal visibility variables for decks and categories so both modals
   // can have independent open/close lifecycles.
   const [showDeckModal, setShowDeckModal] = useState(false)
   const [showCatModal, setShowCatModal] = useState(false)
@@ -37,7 +39,7 @@ export default function Home() {
   const [editingDeck, setEditingDeck] = useState(null)
   const [editingCat, setEditingCat] = useState(null)
 
-  // Staging state for deletion confirmation modals — holds the item the user
+  // Staging the state for "deletion confirmation" modals — holds the item the user
   // has clicked "delete" on without immediately deleting it.
   const [deletingDeck, setDeletingDeck] = useState(null)
   const [deletingCat, setDeletingCat] = useState(null)
@@ -57,15 +59,14 @@ export default function Home() {
   const filteredDecks = filterCat ? decks.filter(d => d.category_id === filterCat) : decks
 
   // Opens the deck modal. Pre-populates the form when editing an existing deck;
-  // resets to blank when creating a new one. Fallback to empty string ensures
-  // the inputs remain controlled (not uncontrolled) even for optional fields.
+  // resets to blank when creating a new one.
   const openDeckModal = (deck = null) => {
     setEditingDeck(deck)
     setDeckForm(deck ? { name: deck.name, description: deck.description || '', category_id: deck.category_id || '' } : { name: '', description: '', category_id: '' })
     setShowDeckModal(true)
   }
 
-  // Same pattern for the category modal. Falls back to the default indigo color
+  // Same setup for the category modal. Falls back to the default color
   // if the existing category has no color stored.
   const openCatModal = (cat = null) => {
     setEditingCat(cat)
@@ -77,14 +78,14 @@ export default function Home() {
     try {
       if (editingDeck) {
         await editDeck(editingDeck.id, deckForm)
-        showToast('Deck updated')
+        showToast('The deck has been updated.')
       } else {
         await addDeck(deckForm)
-        showToast('Deck created')
+        showToast('The deck has been created.')
       }
       setShowDeckModal(false)
     } catch {
-      showToast('Failed to save deck', 'error')
+      showToast('Failed to save deck.', 'error')
     }
   }
 
@@ -93,13 +94,13 @@ export default function Home() {
       if (editingCat) {
         const updated = await updateCategory(editingCat.id, catForm)
         // Replace only the updated category in the array rather than re-fetching
-        // the entire list from the API, keeping the UI snappy.
+        // the entire list from the API..
         setCategories(prev => prev.map(c => c.id === editingCat.id ? updated : c))
         showToast('Category updated')
       } else {
         const created = await createCategory(catForm)
-        // Append the newly created category returned by the API so its
-        // server-assigned id is used in subsequent renders.
+        // Append the newly created category returned by the API so that the ID assigned
+        // to this category by the server used in subsequent renders.
         setCategories(prev => [...prev, created])
         showToast('Category created')
       }
@@ -156,8 +157,7 @@ export default function Home() {
       </div>
 
       {/* Category filter bar — "All" resets the filter; each category button
-          activates that filter. Edit/delete buttons sit alongside each badge
-          so the user can manage categories inline without navigating away. */}
+          activates that filter. Edit/delete buttons sit alongside each badge. */}
       <div className="category-filter">
         <button className={`filter-btn ${filterCat === null ? 'active' : ''}`} onClick={() => setFilterCat(null)}>All</button>
         {categories.map(cat => (
@@ -168,7 +168,7 @@ export default function Home() {
             </button>
             <button className="btn-icon" onClick={() => openCatModal(cat)} title="Edit category">✏️</button>
             {/* Store the category object in state rather than deleting immediately
-                so the confirmation modal can display its name first. */}
+                so the confirmation modal can display first. */}
             <button className="btn-icon btn-icon-danger" onClick={() => setDeletingCat(cat)} title="Delete category">🗑️</button>
           </div>
         ))}
@@ -205,13 +205,13 @@ export default function Home() {
         >
           <label className="form-label">Name *</label>
           {/* Functional update (f => ...) prevents stale closure issues when
-              the onChange fires while another state update is in flight. */}
+              the onChange is triggered while another state update is in flight. */}
           <input className="form-input" value={deckForm.name} onChange={e => setDeckForm(f => ({ ...f, name: e.target.value }))} />
           <label className="form-label">Description</label>
           <textarea className="form-input" value={deckForm.description} onChange={e => setDeckForm(f => ({ ...f, description: e.target.value }))} />
           <label className="form-label">Category</label>
           {/* "None" option maps to an empty string which the backend treats as
-              a null category_id (deck becomes uncategorised). */}
+              a null category_id (so that the deck becomes uncategorised). */}
           <select className="form-input" value={deckForm.category_id} onChange={e => setDeckForm(f => ({ ...f, category_id: e.target.value }))}>
             <option value="">None</option>
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -240,14 +240,14 @@ export default function Home() {
       {/* ── Deck deletion confirmation modal ────────────────────────────────── */}
       {deletingDeck && (
         <Modal title="Delete Deck" onClose={() => setDeletingDeck(null)} onConfirm={confirmDeleteDeck} confirmLabel="Delete" danger>
-          <p>Delete <strong>{deletingDeck.name}</strong>? All flashcards will be permanently deleted.</p>
+          <p>Delete <strong>{deletingDeck.name}</strong>All flashcards will be permanently deleted. Are you sure you wish to proceed?</p>
         </Modal>
       )}
 
       {/* ── Category deletion confirmation modal ────────────────────────────── */}
       {deletingCat && (
         <Modal title="Delete Category" onClose={() => setDeletingCat(null)} onConfirm={confirmDeleteCat} confirmLabel="Delete" danger>
-          <p>Delete <strong>{deletingCat.name}</strong>? Decks in this category will become uncategorised.</p>
+          <p>Delete <strong>{deletingCat.name}</strong>Decks in this category will become uncategorised.</p>
         </Modal>
       )}
     </div>
