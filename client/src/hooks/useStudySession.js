@@ -1,6 +1,8 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 export function useStudySession(cards, shuffled = false) {
+  // buildQueue is memoised so the useEffect below only fires when cards or
+  // shuffled actually change, not on every render.
   const buildQueue = useCallback(() => {
     const queue = [...cards]
     if (shuffled) {
@@ -12,12 +14,23 @@ export function useStudySession(cards, shuffled = false) {
     return queue
   }, [cards, shuffled])
 
-  const [queue, setQueue] = useState(() => buildQueue())
+  const [queue, setQueue] = useState([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [stats, setStats] = useState({ easy: 0, hard: 0, missed: 0, totalRated: 0 })
   const [revisitCount, setRevisitCount] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
   const [sessionDone, setSessionDone] = useState(false)
+
+  // Rebuild the queue whenever the card list or shuffle preference changes.
+  // This is the fix for the blank-study-screen bug: useState initialises only
+  // once, so when StudyMode first renders the hook receives an empty array
+  // (cards haven't loaded yet). This effect fires again once the real cards
+  // arrive and rebuilds the queue correctly.
+  useEffect(() => {
+    setQueue(buildQueue())
+    setCurrentIndex(0)
+    setIsFlipped(false)
+  }, [buildQueue])
 
   const currentCard = queue[currentIndex] ?? null
   const remaining = queue.length - currentIndex
@@ -45,11 +58,11 @@ export function useStudySession(cards, shuffled = false) {
       newQueue.splice(insertAt, 0, card)
       if (insertAt <= currentIndex) setRevisitCount(c => c + 1)
     } else {
-      // missed — reinsert immediately after current
+      // Missed — reinsert immediately at the current position so it becomes
+      // the next card seen.
       newQueue.splice(currentIndex, 1)
       newQueue.splice(currentIndex, 0, card)
       setRevisitCount(c => c + 1)
-      // advance past to the reinserted card (it's now at currentIndex)
       setIsFlipped(false)
       setQueue(newQueue)
       return
@@ -57,12 +70,10 @@ export function useStudySession(cards, shuffled = false) {
 
     setIsFlipped(false)
 
-    if (currentIndex >= newQueue.length) {
-      if (newQueue.length === 0) {
-        setSessionDone(true)
-      } else {
-        setCurrentIndex(newQueue.length - 1)
-      }
+    if (newQueue.length === 0) {
+      setSessionDone(true)
+    } else if (currentIndex >= newQueue.length) {
+      setCurrentIndex(newQueue.length - 1)
     }
 
     setQueue(newQueue)

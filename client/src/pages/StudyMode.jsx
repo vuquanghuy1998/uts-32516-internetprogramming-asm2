@@ -42,7 +42,7 @@ export default function StudyMode() {
   }, [deckId])
 
   // Pass an empty array before the session starts so the hook initialises
-  // with no queue. This is tp avoid building then discarding a queue before the user
+  // with no queue. This is to avoid building then discarding a queue before the user
   // has chosen whether to shuffle.
   const session = useStudySession(started ? cards : [], shuffled)
 

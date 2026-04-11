@@ -1,5 +1,11 @@
+// Navbar.jsx
+// Sticky top navigation bar. Layout order (left → right):
+//   "Cardie" logo | Search box (grows to fill space) | nav links | dark-mode toggle
+// The search dropdown fires against the API after the user types ≥2 characters
+// and closes when a result is clicked or the query is cleared.
+
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { searchCards } from '../../services/sessionService'
 
@@ -31,14 +37,18 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
+      {/* Brand */}
       <Link to="/" className="navbar-brand">Cardie</Link>
+
+      {/* Search — flex-grows to fill the middle of the bar */}
       <div className="navbar-search">
         <input
           type="text"
-          placeholder="Search cards..."
+          placeholder="Search cards…"
           value={query}
           onChange={handleSearch}
           className="search-input"
+          aria-label="Search cards"
         />
         {results.length > 0 && (
           <div className="search-dropdown">
@@ -59,6 +69,24 @@ export default function Navbar() {
         )}
         {searching && <span className="search-spinner" />}
       </div>
+
+      {/* Navigation links */}
+      <div className="navbar-links">
+        <NavLink
+          to="/decks"
+          className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
+        >
+          My Decks
+        </NavLink>
+        <NavLink
+          to="/categories"
+          className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
+        >
+          Categories
+        </NavLink>
+      </div>
+
+      {/* Dark / light mode toggle */}
       <button
         className="theme-toggle"
         onClick={toggleDarkMode}
