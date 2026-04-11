@@ -6,7 +6,7 @@ export default function CategoryBadge({ name, color = '#6366f1' }) {
   return (
     <span
       className="category-badge"
-      style={{ borderLeftColor: color, color }}
+      style={{ background: color, color: '#fff' }}
     >
       {name}
     </span>

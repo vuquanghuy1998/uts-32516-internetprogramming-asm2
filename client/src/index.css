@@ -257,17 +257,15 @@ img { max-width: 100%; display: block; }
 }
 .theme-toggle:hover { background: var(--border); }
 
-/* ── Category badge — rectangular left-border tag ──────────── */
+/* ── Category badge ─────────────────────────────────────────── */
 .category-badge {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 3px;
-  border-left: 3px solid;
-  background: var(--bg);
+  padding: 4px 8px;
+  border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.02em;
-  line-height: 1.6;
+  line-height: 1.2;
 }
 
 /* ── Category filter bar ───────────────────────────────────── */
