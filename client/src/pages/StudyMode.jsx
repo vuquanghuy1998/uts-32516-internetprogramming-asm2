@@ -40,6 +40,8 @@ export default function StudyMode() {
   // This state helps prevents double-submission while the save API call is in-flight.
   const [saving, setSaving] = useState(false)
 
+  useEffect(() => { document.title = 'Study Session — Cardie' }, [])
+
   // Fetch all cards for this deck so their count can be shown on the setup
   // screen and the session queue can be built when the user starts.
   useEffect(() => {

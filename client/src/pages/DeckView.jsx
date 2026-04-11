@@ -49,6 +49,10 @@ export default function DeckView() {
     getDeck(deckId).then(setDeck).catch(() => showToast('Failed to load deck', 'error'))
   }, [deckId])
 
+  useEffect(() => {
+    if (deck) document.title = `${deck.name} - Cardie`
+  }, [deck])
+
   // Opens the create/edit modal. When the user edits an existing card object, the
   // form is filled with that card's current content. Otherwise, when called with no
   // argument (no card object is involved here), it resets the form for

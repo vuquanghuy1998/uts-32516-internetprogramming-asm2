@@ -14,6 +14,8 @@ import { showToast } from '../components/Toast/Toast'
 const DEFAULT_DECK_FORM = { name: '', description: '', category_id: '' }
 
 export default function Home() {
+  useEffect(() => { document.title = 'My Decks - Cardie' }, [])
+
   const { decks, loading, addDeck, editDeck, removeDeck, cloneDeck } = useDecks()
   const [categories, setCategories] = useState([])
   const [filterCat, setFilterCat] = useState(null)

@@ -15,6 +15,8 @@ import { showToast } from '../components/Toast/Toast'
 const DEFAULT_FORM = { name: '', color: '#6366f1', description: '' }
 
 export default function Categories() {
+  useEffect(() => { document.title = 'Categories - Cardie' }, [])
+
   const [categories, setCategories] = useState([])
   const [deckCounts, setDeckCounts] = useState({}) // categoryId → count
   const [loading, setLoading] = useState(true)

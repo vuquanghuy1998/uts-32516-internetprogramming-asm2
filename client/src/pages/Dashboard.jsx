@@ -29,6 +29,10 @@ export default function Dashboard() {
       .catch(() => showToast('Failed to load dashboard', 'error'))
   }, [deckId])
 
+  useEffect(() => {
+    if (deck) document.title = `${deck.name} Dashboard - Cardie`
+  }, [deck])
+
   // Sum every rating (easy + hard + missed) across all cards to get the
   // denominator for the mastery percentage calculation.
   const totalRatings = cards.reduce((sum, c) => sum + c.ease_count + c.hard_count + c.missed_count, 0)

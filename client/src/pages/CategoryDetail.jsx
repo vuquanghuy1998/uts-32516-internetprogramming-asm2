@@ -28,6 +28,10 @@ export default function CategoryDetail() {
       .finally(() => setLoading(false))
   }, [categoryId])
 
+  useEffect(() => {
+    if (category) document.title = `${category.name} - Cardie`
+  }, [category])
+
   if (!loading && !category) {
     return (
       <div className="page">

@@ -3,17 +3,20 @@
 // pitch and a single call-to-action that takes the user to the Decks page.
 // No data fetching is needed here — this page is entirely static.
 
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
 export default function Landing() {
+  useEffect(() => { document.title = 'Cardie - Learn anything, one card at a time' }, [])
+
   return (
     <div className="landing">
       <div className="landing-hero">
         <h1 className="landing-title">Learn anything.<br />One card at a time.</h1>
         <p className="landing-sub">
           Cardie is a flashcard app that helps you study smarter. Create decks,
-          add rich-text cards, and let the session-based review system surface the
-          cards you struggle with most — until you've truly mastered them.
+          add rich-text cards, and see real-time dashboards that identify
+          cards you struggle with most - until you've truly mastered them.
         </p>
         <div className="landing-actions">
           <Link to="/decks" className="btn btn-primary btn-lg">Start Studying →</Link>
@@ -23,7 +26,7 @@ export default function Landing() {
       <div className="landing-features">
         <div className="feature-card">
           <span className="feature-icon">🃏</span>
-          <h3>Rich flashcards</h3>
+          <h3>Rich-content flashcards</h3>
           <p>Write questions and answers with bold, italic, inline code, and code blocks. Attach an image to any card.</p>
         </div>
         <div className="feature-card">
