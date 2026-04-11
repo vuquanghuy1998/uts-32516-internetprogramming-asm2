@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Environment
+.env
+server/.env
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Uploads (user-generated images)
+server/uploads/*
+!server/uploads/.gitkeep
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.sw?
