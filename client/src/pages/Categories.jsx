@@ -6,6 +6,7 @@
 // with an empty name.
 
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../services/categoryService'
 import { getDecks } from '../services/deckService'
 import Modal from '../components/Modal/Modal'
@@ -103,7 +104,7 @@ export default function Categories() {
             <div key={cat.id} className="cat-card" style={{ borderTopColor: cat.color }}>
               <div className="cat-card-header">
                 <span className="cat-color-dot" style={{ background: cat.color }} />
-                <span className="cat-card-name">{cat.name}</span>
+                <Link to={`/categories/${cat.id}`} className="cat-card-name">{cat.name}</Link>
                 <div className="cat-card-actions">
                   <button className="btn-icon" onClick={() => openModal(cat)} title="Edit">✏️</button>
                   <button className="btn-icon btn-icon-danger" onClick={() => setDeletingCat(cat)} title="Delete">🗑️</button>

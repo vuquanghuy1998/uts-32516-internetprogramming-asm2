@@ -21,6 +21,11 @@ import { useStudySession } from '../hooks/useStudySession'
 import CardFlip from '../components/CardFlip/CardFlip'
 import { showToast } from '../components/Toast/Toast'
 
+// Stable reference for the empty-cards state before the session starts.
+// A plain `[]` literal would be a new reference every render, causing
+// buildQueue to recreate every render → infinite re-render loop.
+const EMPTY_CARDS = []
+
 export default function StudyMode() {
   const { deckId } = useParams()
   const navigate = useNavigate()
@@ -42,9 +47,9 @@ export default function StudyMode() {
   }, [deckId])
 
   // Pass an empty array before the session starts so the hook initialises
-  // with no queue. This is to avoid building then discarding a queue before the user
-  // has chosen whether to shuffle.
-  const session = useStudySession(started ? cards : [], shuffled)
+  // with no queue. EMPTY_CARDS is stable so buildQueue's dependency doesn't
+  // change on every render (which would cause an infinite re-render loop).
+  const session = useStudySession(started ? cards : EMPTY_CARDS, shuffled)
 
   // useCallback memoises the handler so the keydown useEffect below only
   // re-registers the listener when the session state actually changes.

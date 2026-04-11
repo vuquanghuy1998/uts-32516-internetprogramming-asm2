@@ -5,6 +5,7 @@ import { ToastContainer } from './components/Toast/Toast'
 import Landing from './pages/Landing'
 import Home from './pages/Home'
 import Categories from './pages/Categories'
+import CategoryDetail from './pages/CategoryDetail'
 import DeckView from './pages/DeckView'
 import StudyMode from './pages/StudyMode'
 import Dashboard from './pages/Dashboard'
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/decks" element={<Home />} />
             <Route path="/categories" element={<Categories />} />
+            <Route path="/categories/:categoryId" element={<CategoryDetail />} />
             <Route path="/decks/:deckId" element={<DeckView />} />
             <Route path="/decks/:deckId/study" element={<StudyMode />} />
             <Route path="/decks/:deckId/dashboard" element={<Dashboard />} />
