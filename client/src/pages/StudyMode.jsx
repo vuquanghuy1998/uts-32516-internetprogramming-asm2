@@ -160,14 +160,14 @@ export default function StudyMode() {
       {/* Live stats bar — always visible during the session so the user can
           track progress without interrupting their flow. */}
       <div className="study-dashboard">
-        <span title="Easy">✅ {session.stats.easy}</span>
-        <span title="Hard">😰 {session.stats.hard}</span>
-        <span title="Missed">❌ {session.stats.missed}</span>
-        <span title="Accuracy">📈 {session.accuracy}%</span>
-        <span title="Remaining">🃏 {session.remaining}</span>
+        <span title="Easy">✅ Easy: {session.stats.easy}</span>
+        <span title="Hard">😰 Hard: {session.stats.hard}</span>
+        <span title="Missed">❌ Missed: {session.stats.missed}</span>
+        <span title="Accuracy">📈 Accuracy: {session.accuracy}%</span>
+        <span title="Remaining">🃏 Remaining cards: {session.remaining}</span>
         {/* How many times any card has looped back into the queue. */}
-        <span title="Revisits">🔁 {session.revisitCount}</span>
-        <button className="btn btn-secondary btn-sm" onClick={handleEndSession}>End</button>
+        <span title="Revisits">🔁 Revisits (current card): {session.revisitCount}</span>
+        <button className="btn btn-secondary btn-sm" onClick={handleEndSession}>End Session</button>
       </div>
 
       {/* Render the flippable card for the current queue position. Also prevents
