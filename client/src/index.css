@@ -268,6 +268,10 @@ img { max-width: 100%; display: block; }
   line-height: 1.2;
 }
 
+.category-page .category-badge {
+  display: none;
+}
+
 /* ── Category filter bar ───────────────────────────────────── */
 .category-filter {
   display: flex;
@@ -325,7 +329,7 @@ img { max-width: 100%; display: block; }
   align-items: flex-start;
 }
 
-.deck-card-actions { display: flex; gap: 4px; }
+.deck-card-actions { display: flex; gap: 4px; padding-left: 5px; }
 
 .deck-card-title {
   font-family: var(--font-heading);

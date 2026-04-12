@@ -12,11 +12,13 @@ export default function DeckCard({ deck, onEdit, onDelete, onDuplicate }) {
         {deck.category_name && (
           <CategoryBadge name={deck.category_name} color={deck.category_color} />
         )}
-        <div className="deck-card-actions">
-          <button className="btn-icon" onClick={() => onEdit(deck)} title="Edit">✏️</button>
-          <button className="btn-icon" onClick={() => onDuplicate(deck.id)} title="Duplicate">📋</button>
-          <button className="btn-icon btn-icon-danger" onClick={() => onDelete(deck)} title="Delete">🗑️</button>
-        </div>
+        {(onEdit || onDelete || onDuplicate) && (
+          <div className="deck-card-actions">
+            {onEdit && <button className="btn-icon" onClick={() => onEdit(deck)} title="Edit">✏️</button>}
+            {onDuplicate && <button className="btn-icon" onClick={() => onDuplicate(deck.id)} title="Duplicate">📋</button>}
+            {onDelete && <button className="btn-icon btn-icon-danger" onClick={() => onDelete(deck)} title="Delete">🗑️</button>}
+          </div>
+        )}
       </div>
       <Link to={`/decks/${deck.id}`} className="deck-card-title">{deck.name}</Link>
       {deck.description && <p className="deck-card-desc">{deck.description}</p>}

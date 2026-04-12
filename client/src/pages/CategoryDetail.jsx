@@ -42,7 +42,7 @@ export default function CategoryDetail() {
   }
 
   return (
-    <div className="page">
+    <div className="page category-page">
       <div className="page-header">
         <div>
           <Link to="/categories" className="breadcrumb">← Categories</Link>
@@ -64,13 +64,7 @@ export default function CategoryDetail() {
           : decks.length === 0
             ? <p className="empty-state">No decks in this category yet.</p>
             : decks.map(deck => (
-                <DeckCard
-                  key={deck.id}
-                  deck={deck}
-                  onEdit={() => {}}
-                  onDelete={() => {}}
-                  onDuplicate={() => {}}
-                />
+                <DeckCard deck={deck} />
               ))
         }
       </div>

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 let toastQueue = []
 let listeners = []
@@ -16,10 +16,10 @@ export function showToast(message, type = 'success') {
 export function ToastContainer() {
   const [toasts, setToasts] = useState([])
 
-  useState(() => {
+  useEffect(() => {
     listeners.push(setToasts)
     return () => { listeners = listeners.filter(fn => fn !== setToasts) }
-  })
+  }, [])
 
   return (
     <div className="toast-container">

@@ -7,7 +7,7 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
-import { searchCards } from '../../services/sessionService'
+import { searchCards } from '../../services/cardService'
 
 export default function Navbar() {
   const { darkMode, toggleDarkMode } = useTheme()
