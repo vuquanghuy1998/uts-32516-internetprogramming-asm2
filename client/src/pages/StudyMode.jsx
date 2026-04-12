@@ -117,6 +117,17 @@ export default function StudyMode() {
       <div className="study-start">
         <h1>Ready to study?</h1>
         <p>{cards.length} cards in this deck</p>
+
+        <div className="study-instructions">
+          <h3>How rating works</h3>
+          <ul>
+            <li><strong>✅ Easy</strong> — You knew it. Card is removed from this session's queue.</li>
+            <li><strong>😰 Hard</strong> — You struggled. Card comes back in 3 cards.</li>
+            <li><strong>❌ Missed</strong> — You didn't know it. Card comes back immediately as the next card.</li>
+          </ul>
+          <p className="study-instructions-note">Accuracy = Easy ratings ÷ total rated. Only Easy counts as correct.</p>
+        </div>
+
         <label className="shuffle-toggle">
           <input type="checkbox" checked={shuffled} onChange={e => setShuffled(e.target.checked)} />
           Shuffle cards

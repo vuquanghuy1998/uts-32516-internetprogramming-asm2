@@ -411,6 +411,15 @@ img { max-width: 100%; display: block; }
 
 .deck-desc { font-size: 0.9rem; color: var(--text-muted); margin-top: 4px; }
 
+.deck-edit-btn {
+  font-size: 0.85rem;
+  margin-left: 8px;
+  vertical-align: middle;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+.deck-edit-btn:hover { opacity: 1; }
+
 /* ── Card flip (StudyMode) ─────────────────────────────────── */
 .card-flip-scene {
   perspective: 1200px;
@@ -680,6 +689,20 @@ img { max-width: 100%; display: block; }
 }
 
 .study-start h1 { font-size: 2rem; }
+
+.study-instructions {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+}
+.study-instructions h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 10px; }
+.study-instructions ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.study-instructions li { font-size: 0.9rem; }
+.study-instructions-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 0; }
 
 .shuffle-toggle {
   display: flex;

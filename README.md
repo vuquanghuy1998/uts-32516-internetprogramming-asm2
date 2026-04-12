@@ -26,18 +26,17 @@ A single-page flashcard learning application that helps students and self-learne
 
 - **Category management** — Create, edit, and delete categories with a custom colour label to group related decks
 - **Deck management** — Create, edit, and delete decks within a category; each deck has a name and description
-- **Flashcard CRUD** — Add, edit, and delete flashcards with a question, answer, and optional image upload
-- **Interactive card-flip study mode** — Cards flip to reveal answers with a smooth 3D animation; users rate each card as Easy, Hard, or Missed
-- **Smart study queue** — Hard and Missed cards are automatically re-queued so they appear again in the same session
-- **Per-deck dashboard** — View study session history, accuracy percentage, and Easy/Hard/Missed breakdowns for a deck
-- **Global search** — Search across all cards and decks from the navbar
-- **Dark mode toggle** — Persistent light/dark theme via React Context
-- **Toast notifications** — Non-blocking feedback for all create, update, and delete actions
-- **Skeleton loading states** — Placeholder UI shown while data is fetching to avoid blank screens
-- **Duplicate deck** — Clone an entire deck and all its cards under a new name
-- **Keyboard shortcuts in study mode** — `Space` to flip, `1` Missed / `2` Hard / `3` Easy to rate, `Escape` to end session
+- **Flashcard CRUD operations** — Add, edit, and delete flashcards. Each flashcard has a question, answer, and optional image upload for visual presentation of the knowledge
+- **Interactive card-flip study mode** — Cards flip to reveal answers with a smooth animation. Users can rate each card as Easy, Hard, or Missed
+- **Smart study queue** — Hard and Missed cards are automatically put back to the queue so they appear again in the same study session
+- **Dashboard for each deck** — View study session history, accuracy percentage, and a summary of the top easy/hard cards for each deck.
+- **Global search** — Search for a specific content/keyword across all cards and decks.
+- **Dark mode toggle** — Persistent light/dark theme for the whole app.
+- **Toast notifications** — Non-blocking response (success or fail) for all create, update, and delete actions.
+- **Skeleton loading states** — Placeholder UI shown while data is fetching to avoid blank screens.
+- **Duplicate deck** — Clone an entire deck and all its cards under a new name.
+- **Keyboard shortcuts in study mode** - Users can hit `Space` to flip, `1` Missed / `2` Hard / `3` Easy to rate, `Escape` to end the current study session.
 - **Responsive design** — Layout adapts for mobile and desktop viewports
-- **Error handling** — All API failures surface a user-facing error message; the app never shows a blank screen on network failure
 
 ---
 
@@ -162,4 +161,8 @@ DB_NAME=cardie
 
 ## Challenges Overcome
 
-Implementing the study session queue was the most nuanced challenge — cards rated Hard or Missed needed to be re-inserted into the remaining queue at a natural position rather than the end, which required careful state management in the `useStudySession` hook to avoid infinite loops while still ensuring difficult cards resurfaced. Synchronising the MySQL connection pool across FastAPI's async request lifecycle also required careful handling to avoid dropped connections under concurrent requests. On the frontend, getting the 3D card-flip CSS animation to behave consistently across browsers while also being interruptible (e.g., navigating away mid-flip) required isolating the animation state fully within the `CardFlip` component. Finally, designing a service layer (`/services`) that cleanly separated API concerns from component logic made the codebase significantly easier to debug and extend as the feature set grew.
+For this assignment, the most challenging part is to organise React functions neatly and logically in accordance with the lecture's file structure requirements, since I am new to developing a full-stack app. The initial planning of the app functionality is also a difficulty given the time constraints. To mitigate this, I have referenced similar flashcards app on the market and create a thorough plan from the beginning so that I don't have to rewrite existing code when implementing a new function in the middle of the development phase.
+
+There are certain features that prove to be challenging to manage. First, implementing the study session queue was the most difficult challenge, cards rated Hard or Missed needed to be re-inserted into the remaining queue at a natural position rather than the end, which required state management in the `useStudySession` hook to avoid infinite loops (for this feature, I required explanation and suggestion from the AI-coding agent Claude Code). Developing the backend, which includes synchronising the MySQL connection pool, is also considerably more challenging than developing the user interface. On the frontend, asynchronous data fetching on the frontend also required a solid understanding of React's useEffect dependencies and stale closure behaviour before the data flow became reliable - which I didn't have in advance. Finally, designing a service layer (`/services`) that separated API connections from component logic made the codebase significantly easier to debug and extend (this is a feature suggested to me by Claude Code - I did not know about it in advance).
+
+To maintain academic integrity in this assignment, I would like to declare the use of Claude Code - the AI coding tool developed by Anthropic to overcome certain challenges as presented above.

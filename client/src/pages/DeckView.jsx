@@ -101,7 +101,7 @@ export default function DeckView() {
     <div className="page">
       <div className="page-header">
         <div>
-          <Link to="/" className="breadcrumb">← Decks</Link>
+          <Link to="/decks" className="breadcrumb">← Decks</Link>
           {/* Show a loading placeholder in the heading until the deck fetch finishes. */}
           <h1>{deck?.name ?? 'Loading…'}</h1>
           {/* Only render the description paragraph if the deck has one. */}
