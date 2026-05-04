@@ -8,7 +8,7 @@ from routers import categories, decks, cards, sessions, search
 
 app = FastAPI(title="Cardie API", version="1.0.0")
 
-# CORS — allow Vite dev server
+# CORS — allow Vite dev server to connect to the backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -19,12 +19,13 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware)
 app.middleware("http")(global_error_handler)
 
-# Serve uploaded images
+# Define upload directory
 uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(uploads_dir, exist_ok=True)
 app.mount("/api/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
-# Register routers under /api prefix
+# Register routers under /api prefix (so that api calls don't messup with
+# frontend calls)
 prefix = "/api"
 app.include_router(categories.router, prefix=prefix)
 app.include_router(decks.router, prefix=prefix)

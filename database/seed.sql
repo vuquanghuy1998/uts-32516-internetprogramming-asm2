@@ -11,18 +11,18 @@ USE cardie;
 
 INSERT INTO categories (id, name, color, description) VALUES
 (1, 'Internet Programming', '#6366f1',
- 'UTS 31748/32516 — Programming on the Internet. Covers React, Python/FastAPI, and MySQL as taught in Autumn 2026.');
+ 'UTS 31748/32516 - Programming on the Internet. Covers React, Python/FastAPI, and MySQL as taught in Autumn 2026.');
 
 -- -------------------------------------------------------------
 -- DECKS
 -- -------------------------------------------------------------
 
 INSERT INTO decks (id, category_id, name, description) VALUES
-(1, 1, 'Lecture 4 — Advanced React Hooks',
+(1, 1, 'Lecture 4 - Advanced React Hooks',
  'Covers the three core React Hooks: useState, useEffect, and useRef — including when to use each and how they interact.'),
-(2, 1, 'Lecture 5 — Python & FastAPI Foundations',
+(2, 1, 'Lecture 5 - Python & FastAPI Foundations',
  'Covers Python fundamentals (strings, lists, dicts, OOP, type hints, Pydantic) and building CRUD APIs with FastAPI.'),
-(3, 1, 'Lecture 6 — Data Persistence with SQL',
+(3, 1, 'Lecture 6 - Data Persistence with SQL',
  'Covers relational databases, MySQL, raw SQL queries with PyMySQL, and the SQLModel ORM for FastAPI.');
 
 -- -------------------------------------------------------------

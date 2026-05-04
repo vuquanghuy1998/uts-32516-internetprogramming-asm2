@@ -136,9 +136,9 @@ export default function DeckView() {
                 <div className="flashcard-a" dangerouslySetInnerHTML={{ __html: card.answer }} />
                 {/* Cumulative rating counts from all past study sessions. */}
                 <div className="flashcard-stats">
-                  <span title="Easy">{card.ease_count}</span>
-                  <span title="Hard">{card.hard_count}</span>
-                  <span title="Missed">{card.missed_count}</span>
+                  <span title="Easy">Easy: {card.ease_count}</span>
+                  <span title="Hard">Hard: {card.hard_count}</span>
+                  <span title="Missed">Missed: {card.missed_count}</span>
                 </div>
                 <div className="flashcard-actions">
                   {/* Pass the full card object to openModal so the form is pre-filled. */}

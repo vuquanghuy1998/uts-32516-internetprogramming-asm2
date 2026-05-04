@@ -5,7 +5,6 @@ from controllers import session_controller
 
 router = APIRouter(tags=["sessions"])
 
-
 class CardRating(BaseModel):
     id: int
     rating: str  # 'easy' | 'hard' | 'missed'
