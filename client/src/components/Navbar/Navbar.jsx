@@ -86,6 +86,7 @@ export default function Navbar() {
       <div className="navbar-links">
         {user ? (
           <>
+            <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}>Dashboard</NavLink>
             <NavLink to="/decks" className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}>My Decks</NavLink>
             <NavLink to="/categories" className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}>Categories</NavLink>
             <NavLink to="/how-it-works" className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}>How It Works</NavLink>

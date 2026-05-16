@@ -33,6 +33,11 @@ export const getMySessions = async () => {
 }
 
 // Admin
+export const getAdminStats = async () => {
+  const { data } = await api.get('/users/admin-stats')
+  return data
+}
+
 export const getAllUsers = async () => {
   const { data } = await api.get('/users')
   return data

@@ -16,6 +16,7 @@ import RegisterPage from './pages/RegisterPage'
 import ProfilePage from './pages/ProfilePage'
 import AdminPage from './pages/AdminPage'
 import HowItWorksPage from './pages/HowItWorksPage'
+import PersonalDashboard from './pages/PersonalDashboard'
 import './App.css'
 
 // Redirects to /login if no JWT is present
@@ -67,6 +68,7 @@ export default function App() {
               <Route path="/decks/:deckId" element={<ProtectedRoute><DeckView /></ProtectedRoute>} />
               <Route path="/decks/:deckId/study" element={<ProtectedRoute><StudyMode /></ProtectedRoute>} />
               <Route path="/decks/:deckId/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><PersonalDashboard /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
               {/* Admin only */}

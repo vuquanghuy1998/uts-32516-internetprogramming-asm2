@@ -316,47 +316,115 @@ img { max-width: 100%; display: block; }
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
   box-shadow: var(--shadow);
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, transform 0.15s;
+  overflow: hidden;
 }
-.deck-card:hover { box-shadow: var(--shadow-lg); }
+.deck-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+
+/* ── Cover — fixed-height strip flush at the top ─────────────── */
+.deck-card-cover {
+  width: 100%;
+  height: 110px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* Make the inner DeckCoverDisplay fill the wrapper exactly */
+.deck-card-cover .deck-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Body — padded area for header / title / description ──────── */
+.deck-card-body {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 18px 0;
+  flex: 1;
+}
 
 .deck-card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
-.deck-card-actions { display: flex; gap: 4px; padding-left: 5px; }
+.deck-card-actions { display: flex; gap: 4px; flex-shrink: 0; }
 
 .deck-card-title {
   font-family: var(--font-heading);
-  font-size: 1.15rem;
-  font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: 700;
   color: var(--text);
+  line-height: 1.3;
+  margin-bottom: 8px;
+  display: block;
 }
 .deck-card-title:hover { color: var(--primary); text-decoration: none; }
 
+/* ── Description — prominent body text ───────────────────────── */
 .deck-card-desc {
-  font-size: 0.88rem;
-  color: var(--text-muted);
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.65;
   flex: 1;
+  margin-bottom: 14px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
+.deck-card-desc p { margin: 0; }
+.deck-card-desc--empty { color: var(--text-muted); font-style: italic; }
 
+/* ── Metadata footer — pill chips, clearly secondary ─────────── */
 .deck-card-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  font-size: 0.8rem;
+  gap: 6px;
+  padding: 12px 18px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.deck-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
   color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.deck-meta-chip--muted { font-style: italic; }
+
+.deck-meta-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.deck-meta-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  opacity: 0.55;
 }
 
 .deck-study-btn {
-  margin-top: 4px;
+  margin: 0 18px 18px;
   text-align: center;
   justify-content: center;
 }
@@ -620,7 +688,7 @@ img { max-width: 100%; display: block; }
   outline: none;
   transition: border-color 0.15s;
   resize: vertical;
-}
+}ç
 .form-input:focus { border-color: var(--primary); }
 
 .form-color {
@@ -1386,15 +1454,7 @@ img { max-width: 100%; display: block; }
 
 .card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 
-/* ── Deck cover ────────────────────────────────────────────── */
-.deck-card-cover {
-  width: 100%;
-  height: 80px;
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  margin-bottom: 4px;
-}
-
+/* ── Deck cover (standalone rules for non-card contexts) ──── */
 .deck-cover {
   width: 100%;
   height: 100%;
@@ -1687,4 +1747,207 @@ img { max-width: 100%; display: block; }
 
   .admin-table { font-size: 0.78rem; }
   .admin-actions { flex-direction: column; }
+
+  .stat-cards-grid { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-two-col { grid-template-columns: 1fr; }
+  .bar-chart { gap: 4px; }
+}
+
+/* ── Personal Dashboard ────────────────────────────────────── */
+.stat-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 18px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.stat-card-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-card-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.dashboard-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+}
+
+.dashboard-card h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.dashboard-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.dashboard-card-header h2 { margin-bottom: 0; }
+
+.chart-range-toggle { display: flex; gap: 8px; }
+
+.dashboard-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+/* ── Bar chart ─────────────────────────────────────────────── */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 160px;
+  padding: 8px 0 0;
+  overflow-x: auto;
+}
+
+.bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 28px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.bar-value {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+  min-height: 4px;
+}
+
+.bar-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  transform: rotate(-40deg) translateX(-4px);
+  transform-origin: top center;
+  margin-top: 8px;
+}
+
+/* ── Card stat list (hardest/easiest) ─────────────────────── */
+.card-stat-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-stat-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 2px 8px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.card-stat-q {
+  font-size: 0.88rem;
+  color: var(--text);
+  grid-column: 1;
+  grid-row: 1;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.card-stat-badge {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  align-self: center;
+}
+
+.badge-missed { color: var(--danger); }
+.badge-easy   { color: var(--success); }
+
+.card-stat-deck {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+/* ── Deck highlight (most/least studied) ──────────────────── */
+.deck-highlight {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.deck-highlight-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.deck-highlight-meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ── Empty dashboard CTA ───────────────────────────────────── */
+.empty-dashboard-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--text-muted);
 }

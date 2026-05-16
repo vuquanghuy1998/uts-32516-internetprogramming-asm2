@@ -13,29 +13,29 @@ class CategoryBody(BaseModel):
 
 
 @router.get("")
-def list_categories(_user: dict = Depends(get_current_user)):
+def list_categories(user: dict = Depends(get_current_user)):
     try:
-        return category_controller.get_all_categories()
+        return category_controller.get_all_categories(user["id"])
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("", status_code=201)
-def create_category(body: CategoryBody, _user: dict = Depends(get_current_user)):
+def create_category(body: CategoryBody, user: dict = Depends(get_current_user)):
     if not body.name.strip():
         raise HTTPException(status_code=400, detail="Name is required")
     try:
-        return category_controller.create_category(body.name, body.color, body.description)
+        return category_controller.create_category(user["id"], body.name, body.color, body.description)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.put("/{category_id}")
-def update_category(category_id: int, body: CategoryBody, _user: dict = Depends(get_current_user)):
+def update_category(category_id: int, body: CategoryBody, user: dict = Depends(get_current_user)):
     if not body.name.strip():
         raise HTTPException(status_code=400, detail="Name is required")
     try:
-        result = category_controller.update_category(category_id, body.name, body.color, body.description)
+        result = category_controller.update_category(category_id, user["id"], body.name, body.color, body.description)
         if not result:
             raise HTTPException(status_code=404, detail="Category not found")
         return result
@@ -46,8 +46,8 @@ def update_category(category_id: int, body: CategoryBody, _user: dict = Depends(
 
 
 @router.delete("/{category_id}", status_code=204)
-def delete_category(category_id: int, _user: dict = Depends(get_current_user)):
+def delete_category(category_id: int, user: dict = Depends(get_current_user)):
     try:
-        category_controller.delete_category(category_id)
+        category_controller.delete_category(category_id, user["id"])
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

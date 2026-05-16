@@ -25,10 +25,12 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS categories (
   id          INT AUTO_INCREMENT PRIMARY KEY,
+  user_id     INT          NOT NULL,
   name        VARCHAR(100) NOT NULL,
   color       VARCHAR(7)   DEFAULT '#6366f1',
   description TEXT,
-  created_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+  created_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS decks (

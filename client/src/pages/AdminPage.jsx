@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { getAllUsers, editUser, setUserRole, toggleUserActive, deleteUser, getUserSessions } from '../services/userService'
+import { Link } from 'react-router-dom'
+import { getAllUsers, editUser, setUserRole, toggleUserActive, deleteUser, getUserSessions, getAdminStats } from '../services/userService'
 import Modal from '../components/Modal/Modal'
 import { showToast } from '../components/Toast/Toast'
 import { useAuth } from '../context/AuthContext'
@@ -12,13 +13,17 @@ export default function AdminPage() {
   const [sessions, setSessions] = useState([])
   const [showSessions, setShowSessions] = useState(false)
   const [deletingUser, setDeletingUser] = useState(null)
+  const [adminStats, setAdminStats] = useState(null)
 
   useEffect(() => { document.title = 'Admin — Cardie' }, [])
 
   useEffect(() => {
-    getAllUsers()
-      .then(setUsers)
-      .catch(() => showToast('Failed to load users', 'error'))
+    Promise.all([getAllUsers(), getAdminStats()])
+      .then(([usersData, statsData]) => {
+        setUsers(usersData)
+        setAdminStats(statsData)
+      })
+      .catch(() => showToast('Failed to load admin data', 'error'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -82,13 +87,39 @@ export default function AdminPage() {
         </div>
         <div className="stat-pill">
           <span className="stat-num">{users.filter(u => u.is_active).length}</span>
-          <span className="stat-label">Active</span>
+          <span className="stat-label">Active Users</span>
+        </div>
+        <div className="stat-pill">
+          <span className="stat-num">{adminStats?.active_this_week ?? '—'}</span>
+          <span className="stat-label">Active This Week</span>
         </div>
         <div className="stat-pill">
           <span className="stat-num">{users.filter(u => u.role === 'admin').length}</span>
           <span className="stat-label">Admins</span>
         </div>
       </div>
+
+      {/* ── Top decks across all users ────────────────────────── */}
+      {adminStats?.top_decks && adminStats.top_decks.length > 0 && (
+        <div className="dashboard-card" style={{ marginBottom: '24px' }}>
+          <h2>Top Decks (All Users)</h2>
+          <table className="admin-table">
+            <thead>
+              <tr><th>Deck</th><th>Owner</th><th>Sessions</th><th>Cards Studied</th></tr>
+            </thead>
+            <tbody>
+              {adminStats.top_decks.map(d => (
+                <tr key={d.id}>
+                  <td><Link to={`/decks/${d.id}`}>{d.name}</Link></td>
+                  <td>{d.owner}</td>
+                  <td>{d.session_count}</td>
+                  <td>{d.total_cards_studied}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* ── Users table ───────────────────────────────────────── */}
       <div className="dashboard-card" style={{ overflowX: 'auto' }}>

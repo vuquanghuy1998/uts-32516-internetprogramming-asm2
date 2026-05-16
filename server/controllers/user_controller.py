@@ -135,6 +135,56 @@ def get_user_study_history(user_id: int):
         conn.close()
 
 
+def get_admin_stats():
+    """Summary stats for the admin dashboard."""
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Active users this week (at least one session in last 7 days)
+        cursor.execute(
+            """SELECT COUNT(DISTINCT user_id) AS active_this_week
+               FROM study_sessions
+               WHERE studied_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)"""
+        )
+        active_row = cursor.fetchone()
+
+        # Top 5 decks across all users by total sessions
+        cursor.execute(
+            """SELECT d.id, d.name, u.username AS owner,
+                      COUNT(ss.id) AS session_count,
+                      COALESCE(SUM(ss.total_cards), 0) AS total_cards_studied
+               FROM study_sessions ss
+               JOIN decks d ON d.id = ss.deck_id
+               JOIN users u ON u.id = d.user_id
+               GROUP BY d.id, d.name, u.username
+               ORDER BY session_count DESC
+               LIMIT 5"""
+        )
+        top_decks = cursor.fetchall()
+
+        # Per-user study summary (username, total sessions, total cards, last active)
+        cursor.execute(
+            """SELECT u.id, u.username, u.email,
+                      COUNT(ss.id) AS total_sessions,
+                      COALESCE(SUM(ss.total_cards), 0) AS total_cards_studied,
+                      MAX(ss.studied_at) AS last_active
+               FROM users u
+               LEFT JOIN study_sessions ss ON ss.user_id = u.id
+               GROUP BY u.id, u.username, u.email
+               ORDER BY last_active DESC"""
+        )
+        user_summaries = cursor.fetchall()
+
+        return {
+            "active_this_week": active_row["active_this_week"],
+            "top_decks": top_decks,
+            "user_summaries": user_summaries,
+        }
+    finally:
+        cursor.close()
+        conn.close()
+
+
 def save_avatar(upload_file, user_id: int) -> str:
     avatars_dir = os.path.join(UPLOAD_DIR, "avatars")
     os.makedirs(avatars_dir, exist_ok=True)

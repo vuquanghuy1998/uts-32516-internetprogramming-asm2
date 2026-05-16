@@ -93,6 +93,14 @@ def my_sessions(user: dict = Depends(get_current_user)):
 
 # ── Admin routes ─────────────────────────────────────────────────────────────
 
+@router.get("/admin-stats")
+def admin_stats(admin: dict = Depends(require_admin)):
+    try:
+        return user_controller.get_admin_stats()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("")
 def list_users(admin: dict = Depends(require_admin)):
     try:
