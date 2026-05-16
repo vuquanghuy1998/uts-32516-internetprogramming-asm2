@@ -9,6 +9,7 @@ venv/
 # Environment
 .env
 server/.env
+server/local-installation-guide.md
 
 # Node
 node_modules/
