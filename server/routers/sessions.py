@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
+from middleware.auth import get_current_user
 from controllers import session_controller
 
 router = APIRouter(tags=["sessions"])
+
 
 class CardRating(BaseModel):
     id: int
@@ -21,18 +23,19 @@ class SessionBody(BaseModel):
 
 
 @router.get("/decks/{deck_id}/sessions")
-def list_sessions(deck_id: int):
+def list_sessions(deck_id: int, user: dict = Depends(get_current_user)):
     try:
-        return session_controller.get_sessions_for_deck(deck_id)
+        return session_controller.get_sessions_for_deck(deck_id, user["id"])
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/sessions", status_code=201)
-def save_session(body: SessionBody):
+def save_session(body: SessionBody, user: dict = Depends(get_current_user)):
     try:
-        ratings = [r.dict() for r in body.card_ratings] if body.card_ratings else []
+        ratings = [r.model_dump() for r in body.card_ratings] if body.card_ratings else []
         session_id = session_controller.save_session(
+            user["id"],
             body.deck_id,
             body.easy_count,
             body.hard_count,
@@ -42,5 +45,13 @@ def save_session(body: SessionBody):
             ratings,
         )
         return {"id": session_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/dashboard")
+def personal_dashboard(user: dict = Depends(get_current_user)):
+    try:
+        return session_controller.get_personal_dashboard(user["id"])
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

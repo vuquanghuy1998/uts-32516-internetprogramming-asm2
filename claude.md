@@ -1,24 +1,26 @@
-# Cardie — Flashcard Learning App
+# Cardie — A2 CLAUDE.md
 ## Claude Code Project Context File
 
-> This file is the single source of truth for the Cardie project. Read this fully before writing any code, generating any files, or making any architectural decisions.
+> This file is the single source of truth for the Cardie A2 project. Read this fully before writing any code, generating any files, or making any architectural decisions.
 
 ---
 
 ## 1. Project Overview
 
-**Cardie** is a single-page flashcard learning application built for a university assignment (UTS 31748/32516 — Dynamic Web Interface to a Database System).
+**Cardie** is a single-page flashcard learning application. This is Assignment 2 (UTS 31748/32516), extending the A1 codebase with multi-user support, JWT authentication, admin management, a richer dashboard, card tagging, deck cover images, per-deck visual customisation, and a full-featured TipTap rich text editor.
 
 ### Problem It Solves
-Students and learners need a structured, engaging way to create and study flashcards. Cardie organises cards into decks and categories, supports rich content (formatted text + images), and uses a simple session-based spaced repetition system to prioritise cards the user struggles with.
+Students and learners need a structured, engaging way to create and study flashcards. Cardie organises cards into decks and categories, supports rich content (formatted text + images), and uses a session-based queue system to prioritise cards the user struggles with. Multi-user support now lets each learner have their own private deck library, with an admin able to oversee all activity.
 
 ### Assignment Constraints
 - Must behave as a **Single-Page Application (SPA)** — one HTML entry point, no full page reloads
 - Must include all **CRUD operations** on a database
-- Must have a **seamless, streamlined interface** with no unnecessary steps
-- **No authentication required** — the app is single-user, local
-- Submitted as a **zip file** run locally by the marker — everything must work with just `pip install -r requirements.txt` and `npm install`
-- Marked on: SPA behaviour, CRUD coverage, business logic, UX/UI polish, README quality, code quality, in-person Q&A
+- Must have at least **3 conceptual entities** with CRUD
+- Must include **JWT authentication** with password hashing
+- Must include **live search** (real-time filtering)
+- Must include **admin role** with elevated access
+- Submitted as a **GitHub repo** with video demo — must work with `pip install -r requirements.txt` and `npm install`
+- Solo submission — workload allocation section in README simply states all work is individual
 
 ---
 
@@ -27,303 +29,395 @@ Students and learners need a structured, engaging way to create and study flashc
 | Layer | Technology | Reason |
 |-------|-----------|--------|
 | Frontend | React (Vite) | SPA behaviour, component reuse, fast dev |
-| Rich Text Editor | TipTap | Modern, React-friendly, supports bold/italic/code blocks |
+| Rich Text Editor | TipTap (free extensions only) | Modern, headless, React-friendly; replaces plain textareas from A1 |
 | Styling | CSS Modules or Tailwind CSS | Scoped styles, clean maintainable code |
 | Backend | Python + FastAPI | Clean, modern Python framework with auto-generated API docs |
-| Database | MySQL | Required by course, relational structure fits the data model |
-| Database Driver | mysql-connector-python | Raw SQL queries, direct and transparent, no ORM abstraction |
-| File Uploads | python-multipart | Handles multipart form data for image uploads in FastAPI |
-| Environment | python-dotenv | Manage DB credentials via .env file |
-| Dev Server | uvicorn | ASGI server to run FastAPI with hot reload |
+| Database | MySQL | Relational structure fits the data model |
+| Database Driver | mysql-connector-python | Raw SQL queries, no ORM abstraction |
+| Auth | python-jose[cryptography] + passlib[bcrypt] | JWT token generation + secure password hashing |
+| File Uploads | python-multipart | Handles image uploads (deck covers, card images) |
+| Environment | python-dotenv | Manage credentials via .env |
+| Dev Server | uvicorn | ASGI server for FastAPI with hot reload |
 
-### Why These Choices
-- FastAPI automatically generates interactive API docs at `/docs` (Swagger UI) — great for testing and demonstrating to the marker
-- mysql-connector-python uses raw SQL — leverages existing SQL knowledge from the course, queries are transparent and easy to understand
-- python-multipart saves images to a local `/uploads` folder — no cloud accounts needed, works out of the box for the marker
-- TipTap saves rich text as HTML strings in a MySQL TEXT column — simple and renderable
-- No Redux, no GraphQL, no WebSockets — keep it simple and maintainable
+### Key Decisions
+- **No SQLAlchemy ORM** — raw SQL with mysql-connector-python only
+- **No Redux** — React Context + useState is sufficient
+- **No cloud storage** — python-multipart saves to local `/uploads` folder
+- **No multiple HTML files** — React Router handles all navigation
+- **TipTap free tier only** — no paid/cloud extensions needed
 
 ---
 
 ## 3. Database Schema
 
-### Table: `categories`
-Organises decks into subjects (e.g. "Science", "Languages", "Computer Science")
+### Table: `users` ← NEW in A2
+```sql
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  email VARCHAR(150) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  role ENUM('admin', 'user') DEFAULT 'user',
+  full_name VARCHAR(100),
+  bio TEXT,                                      -- stored as HTML from TipTap
+  avatar_url VARCHAR(255),
+  theme_preference ENUM('light', 'dark', 'system') DEFAULT 'system',
+  is_active BOOLEAN DEFAULT TRUE,
+  has_completed_onboarding BOOLEAN DEFAULT FALSE, -- controls first-run tour
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_login TIMESTAMP
+);
+```
 
+### Table: `categories` (unchanged from A1)
 ```sql
 CREATE TABLE categories (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
-  color VARCHAR(7) DEFAULT '#6366f1',  -- hex color for UI badge
+  color VARCHAR(7) DEFAULT '#6366f1',
   description TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
-### Table: `decks`
-A named collection of flashcards belonging to a category
-
+### Table: `decks` ← updated: add user_id, cover image, style fields
 ```sql
 CREATE TABLE decks (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
   category_id INT,
   name VARCHAR(150) NOT NULL,
-  description TEXT,
+  description TEXT,                        -- stored as HTML from TipTap
+  cover_image_path VARCHAR(255),           -- 'uploads/covers/deck_123.jpg' or preset key
+  cover_image_type ENUM('preset', 'upload') DEFAULT 'preset',
+  style_bg_color VARCHAR(7) DEFAULT '#ffffff',
+  style_text_color VARCHAR(7) DEFAULT '#1a1a2e',
+  style_font_size ENUM('small', 'medium', 'large') DEFAULT 'medium',
+  style_font_family ENUM('sans', 'serif', 'mono', 'decorative') DEFAULT 'sans',
+  style_border_style ENUM('none', 'rounded', 'sharp') DEFAULT 'rounded',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
 );
 ```
 
-### Table: `flashcards`
-Individual cards with rich text content, optional image, and cumulative study stats
-
+### Table: `flashcards` (unchanged from A1)
 ```sql
 CREATE TABLE flashcards (
   id INT AUTO_INCREMENT PRIMARY KEY,
   deck_id INT NOT NULL,
-  question TEXT NOT NULL,         -- stored as HTML string from TipTap
-  answer TEXT NOT NULL,           -- stored as HTML string from TipTap
-  image_path VARCHAR(255),        -- relative path e.g. 'uploads/card_123.jpg'
-  ease_count INT DEFAULT 0,       -- cumulative Easy ratings across all sessions
-  hard_count INT DEFAULT 0,       -- cumulative Hard ratings across all sessions
-  missed_count INT DEFAULT 0,     -- cumulative Missed ratings across all sessions
+  question TEXT NOT NULL,       -- stored as HTML from TipTap
+  answer TEXT NOT NULL,         -- stored as HTML from TipTap
+  image_path VARCHAR(255),
+  ease_count INT DEFAULT 0,
+  hard_count INT DEFAULT 0,
+  missed_count INT DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (deck_id) REFERENCES decks(id) ON DELETE CASCADE
 );
 ```
 
-### Table: `study_sessions`
-Logs each completed study session for history and dashboard metrics
-
+### Table: `study_sessions` ← updated: add user_id
 ```sql
 CREATE TABLE study_sessions (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
   deck_id INT NOT NULL,
   easy_count INT DEFAULT 0,
   hard_count INT DEFAULT 0,
   missed_count INT DEFAULT 0,
   total_cards INT DEFAULT 0,
-  accuracy_percent DECIMAL(5,2),  -- easy_count / total_cards * 100
+  accuracy_percent DECIMAL(5,2),
   studied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (deck_id) REFERENCES decks(id) ON DELETE CASCADE
 );
 ```
 
-### Relationships
-- One category → many decks
-- One deck → many flashcards
-- One deck → many study sessions
-- Deleting a deck cascades to delete its flashcards and study sessions
+### Table: `tags` ← NEW in A2
+```sql
+CREATE TABLE tags (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL,
+  user_id INT NOT NULL,
+  color VARCHAR(7) DEFAULT '#6366f1',
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+```
+
+### Table: `card_tags` ← NEW in A2 (junction table)
+```sql
+CREATE TABLE card_tags (
+  card_id INT NOT NULL,
+  tag_id INT NOT NULL,
+  PRIMARY KEY (card_id, tag_id),
+  FOREIGN KEY (card_id) REFERENCES flashcards(id) ON DELETE CASCADE,
+  FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+);
+```
+
+### Entity Summary (satisfies ≥3 CRUD entity requirement)
+- `users` — full CRUD (admin manages all; user manages self)
+- `decks` — full CRUD (user-scoped)
+- `flashcards` — full CRUD
+- `categories` — full CRUD
+- `study_sessions` — Create + Read
+- `tags` / `card_tags` — full CRUD
 
 ---
 
-## 4. Full Feature List
+## 4. Authentication & User Management
 
-### 4.1 Category Management
-- View all categories as cards on the home/browse page
-- Create a new category (name, color picker, optional description)
-- Edit a category name, color, or description
-- Delete a category (with confirmation modal — warns that decks will be unlinked)
-- Each category displays a colored badge and count of decks inside it
+### First-Run Admin Bootstrap
+```
+App loads → GET /api/users/admin-exists
+                    ↓ false                  ↓ true
+        Show "Create Admin" form     Show normal Register form
+        (one-time only)              (creates role='user')
+```
+- Backend checks `SELECT COUNT(*) FROM users WHERE role = 'admin'`
+- If zero → allow admin creation on the register endpoint
+- If ≥1 → only allow `role='user'` registration; admin must appoint via PATCH
 
-### 4.2 Deck Management
-- View all decks, filterable by category
-- Create a new deck (name, description, assign to category)
-- Edit a deck (name, description, category reassignment)
-- Delete a deck (with confirmation modal — warns cards will be deleted)
-- **Duplicate a deck** — clone the deck and all its cards with a new name
-- Each deck card shows: card count, mastery %, last studied date (from study_sessions)
+### JWT Flow
+- `POST /api/auth/register` → hash password with bcrypt → store user → return JWT
+- `POST /api/auth/login` → accepts username OR email in one field → verify hash → return JWT
+- JWT payload: `{ id, username, role, exp }`
+- Frontend stores token in `localStorage`; attaches as `Authorization: Bearer <token>` header
+- All protected routes use a `get_current_user` FastAPI dependency that decodes the JWT
 
-### 4.3 Flashcard Management
-- View all cards within a deck in a grid or list layout
-- Create a new card with:
-  - Question field (TipTap rich text — bold, italic, underline, code block)
-  - Answer field (TipTap rich text)
-  - Optional image upload (python-multipart — shown on the card)
-- Edit an existing card (all fields editable)
-- Delete a card (with confirmation)
-- **Card shuffle toggle** — randomise card order before studying
-
-### 4.4 Study Mode (Session-Based Spaced Repetition)
-This is the core feature. Behaviour must be exactly as follows:
-
-**Starting a session:**
-- User clicks "Study" on a deck
-- All cards in the deck are loaded into a session queue
-- Optional shuffle toggle before starting
-
-**During a session — live dashboard visible at all times showing:**
-- ✅ Easy count (this session)
-- 😰 Hard count (this session)
-- ❌ Missed count (this session)
-- 📈 Accuracy % (easy / total rated so far × 100)
-- 🃏 Remaining cards in queue
-- 🔁 Revisit count (how many times cards have looped back)
-
-**Card interaction:**
-- Card displays the question (with rendered rich text and image if present)
-- User clicks the card (or presses Spacebar) to flip and reveal the answer
-- After flipping, three buttons appear: **Missed** | **Hard** | **Easy**
-
-**Queue logic:**
-- **Easy** → card is removed from the queue permanently for this session
-- **Hard** → card is reinserted into the queue 3 positions ahead
-- **Missed** → card is reinserted immediately as the next card
-
-**Session end:**
-- Triggered when queue is empty (all cards rated Easy)
-- Or user clicks "End Session" early
-- Summary screen shown: final stats for the session
-- Stats saved to DB: `study_sessions` table updated, and each card's `ease_count`, `hard_count`, `missed_count` incremented accordingly
-- User returned to the deck page
-
-### 4.5 Progress Dashboard
-- Accessible from each deck page
-- Shows:
-  - Mastery % (ease_count / total ratings × 100, calculated from flashcards table)
-  - Bar chart or visual breakdown of Easy / Hard / Missed across all sessions
-  - Study session history list (date, accuracy %, cards studied)
-  - Hardest cards (top 5 by missed_count)
-  - Easiest cards (top 5 by ease_count)
-- All data pulled from `flashcards` and `study_sessions` tables
-
-### 4.6 Search
-- Global search bar accessible from the main navigation
-- Searches across card questions and answers (MySQL LIKE query)
-- Results show which deck each card belongs to
-- Clicking a result navigates to that deck with the card highlighted
-
-### 4.7 UI/UX Features
-- **Dark mode toggle** — persisted in localStorage, applied via CSS variables on root
-- **Keyboard shortcuts during study mode:**
-  - `Space` — flip card
-  - `1` — rate Missed
-  - `2` — rate Hard
-  - `3` — rate Easy
-  - `Escape` — end session
-- **Smooth card flip animation** — CSS 3D transform `rotateY(180deg)` on click
-- **Toast notifications** — brief success/error messages for all CRUD operations
-- **Skeleton loaders** — shown while API calls are in flight
-- **Confirmation modals** — for all destructive actions (delete deck, delete card, delete category)
-- **Responsive design** — works on mobile and desktop
+### Role-Based Access
+| Action | User | Admin |
+|--------|------|-------|
+| Manage own decks/cards | ✅ | ✅ |
+| View own study history | ✅ | ✅ |
+| Edit own profile | ✅ | ✅ |
+| View all users | ❌ | ✅ |
+| CRUD any user account | ❌ | ✅ |
+| Promote user to admin | ❌ | ✅ |
+| View all users' study history | ❌ | ✅ |
 
 ---
 
-## 5. API Routes
+## 5. Full Feature List
 
-All routes prefixed with `/api`
+### 5.1 Auth Pages (NEW)
+- `/register` — Username, email, password fields; first-run admin bootstrap logic
+- `/login` — Single "Username or Email" input + password; issues JWT on success
+- Redirect to `/` after login; redirect to `/login` if JWT missing/expired
 
-### Categories
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/api/categories` | Get all categories |
-| POST | `/api/categories` | Create a category |
-| PUT | `/api/categories/:id` | Update a category |
-| DELETE | `/api/categories/:id` | Delete a category |
+### 5.2 User Profile Page (NEW)
+- View and edit: full_name, username, email, bio (TipTap editor), avatar_url
+- Theme preference toggle (light / dark / system) — syncs to ThemeContext
+- Shows user's deck count and total study sessions
+- Change password (requires current password confirmation)
 
-### Decks
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/api/decks` | Get all decks (with category info) |
-| GET | `/api/decks/:id` | Get single deck with card count + last studied |
-| POST | `/api/decks` | Create a deck |
-| PUT | `/api/decks/:id` | Update a deck |
-| DELETE | `/api/decks/:id` | Delete a deck |
-| POST | `/api/decks/:id/duplicate` | Duplicate a deck and its cards |
+### 5.3 Admin Dashboard (NEW)
+- View all registered users in a table (username, email, role, last_login, is_active)
+- CRUD on users: create, edit fields, toggle is_active, delete, promote to admin
+- View per-user study history: sessions table with deck name, accuracy, date
+- Summary stats: total users, active this week, top decks across all users
 
-### Flashcards
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/api/decks/:deckId/cards` | Get all cards in a deck |
-| POST | `/api/decks/:deckId/cards` | Create a card (multipart/form-data for image) |
-| PUT | `/api/cards/:id` | Update a card |
-| DELETE | `/api/cards/:id` | Delete a card |
+### 5.4 Personal Dashboard (enhanced from A1)
+User-scoped metrics pulled from `study_sessions` and `flashcards`:
+- **Study streak** — consecutive days with at least one session
+- **Overall accuracy rate** — easy / total rated × 100 across all sessions
+- **Cards studied over time** — bar/line chart, last 7 or 30 days (toggle)
+- **Total cards studied** — today / this week / this month
+- **Most studied deck** and **least studied deck**
+- **Hardest cards** — top 5 by missed_count
+- **Easiest cards** — top 5 by ease_count
 
-### Study Sessions
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/api/decks/:deckId/sessions` | Get session history for a deck |
-| POST | `/api/sessions` | Save a completed session + update card stats |
+### 5.5 Category Management (unchanged from A1)
+- View all categories as cards; create, edit, delete (with confirmation modal)
 
-### Search
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/api/search?q=keyword` | Search cards by question/answer content |
+### 5.6 Deck Management (updated from A1)
+- View all decks for the logged-in user; filterable by category and tag
+- Create/edit deck: name, description (TipTap), category, cover image, style options
+- **Cover image:** choose from ~12 preset covers (subject icons) OR upload a custom image
+- **Per-deck style customisation** (stored in `decks` table):
+  - Card background colour (preset palette of ~10 colours)
+  - Text colour (auto-suggests contrast; manual override allowed)
+  - Font size (small / medium / large)
+  - Font family (sans-serif / serif / monospace / decorative)
+  - Border style (none / rounded / sharp)
+- Delete deck (with confirmation, warns cards will be deleted)
+- Duplicate a deck (clones all cards)
+- Each deck card shows: cover image, card count, mastery %, last studied date
+
+### 5.7 Flashcard Management (updated from A1)
+- View cards in a deck (grid or list layout)
+- Create/edit card: question + answer both use TipTap rich text editor; optional image upload
+- **TipTap extensions in use:** StarterKit, Mathematics (KaTeX), CodeBlockLowlight, Image, TextAlign
+- **Tagging:** type-and-press-Enter tag input; displays as coloured chips; tags are per-user
+- Cards rendered read-only using TipTap's `editable: false` mode (not `dangerouslySetInnerHTML`)
+- Delete card (with confirmation)
+- Card shuffle toggle before study
+
+### 5.8 Study Mode (unchanged from A1)
+- Queue logic lives in `useStudySession.js`
+- Easy → remove from queue; Hard → reinsert +3 positions; Missed → reinsert immediately next
+- Live stats during session: easy/hard/missed/accuracy/remaining/revisit count
+- Keyboard shortcuts: Space (flip), 1 (missed), 2 (hard), 3 (easy), Escape (end)
+- Session summary on completion; stats saved to `study_sessions`, increments on `flashcards`
+
+### 5.9 Search (updated from A1)
+- Global search: filters card questions/answers in real-time (MySQL LIKE)
+- Filter by tag: clicking a tag shows all cards with that tag across decks
+- Tag filter integrated into the global search bar
+
+### 5.10 Onboarding & UX Guidance (NEW, based on tutor feedback)
+- **First-run onboarding tour** — step-by-step tooltip overlay using Intro.js or Shepherd.js
+  - Triggered when `has_completed_onboarding = false` on the user's account
+  - Steps: Welcome → Create a deck → Add cards → Start studying → Done
+  - On completion, PATCH `/api/users/me` sets `has_completed_onboarding = true`
+- **Empty state messages** — every blank list shows an explanation + call-to-action button:
+  - No decks → "You haven't created any decks yet. A deck is a collection of flashcards on a topic."
+  - No cards in deck → "This deck is empty. Add your first flashcard to start studying."
+  - No sessions → "You haven't studied yet. Open a deck and hit Study to begin."
+- **Inline form hints** — helper text beneath key fields (question, answer, tags)
+- **Tooltips** — `?` icon next to non-obvious controls (queue logic, mastery %, study streak)
+- **"How It Works" page** — accessible from navbar/footer; explains the study method in 3-4 sections
+
+### 5.11 UI/UX Features (carried from A1, updated)
+- Dark mode toggle — persisted in localStorage AND in `users.theme_preference`
+- Smooth card flip animation (CSS rotateY)
+- Toast notifications for all CRUD operations
+- Skeleton loaders during API calls
+- Confirmation modals for all destructive actions
+- Responsive design (mobile + desktop); bottom tab bar on mobile
 
 ---
 
-## 6. Folder Structure
+## 6. API Routes
+
+### Auth
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/auth/admin-exists` | Public | Returns bool — is any admin in DB? |
+| POST | `/api/auth/register` | Public | Create user account |
+| POST | `/api/auth/login` | Public | Returns JWT |
+
+### Users
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/users` | Admin | List all users |
+| GET | `/api/users/me` | User | Own profile |
+| PATCH | `/api/users/me` | User | Update own profile |
+| GET | `/api/users/{id}` | Admin | View any user |
+| PATCH | `/api/users/{id}` | Admin | Edit any user |
+| PATCH | `/api/users/{id}/role` | Admin | Promote/demote role |
+| DELETE | `/api/users/{id}` | Admin | Delete user |
+
+### Categories, Decks, Cards, Sessions, Search
+Carry over from A1 with decks and sessions scoped to `user_id` from JWT. All routes except search require a valid JWT.
+
+### Tags
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/tags` | User | List own tags |
+| POST | `/api/tags` | User | Create tag |
+| PATCH | `/api/tags/{id}` | User | Rename/recolour tag |
+| DELETE | `/api/tags/{id}` | User | Delete tag (removes from all cards) |
+| POST | `/api/cards/{id}/tags` | User | Assign tag to card |
+| DELETE | `/api/cards/{id}/tags/{tag_id}` | User | Remove tag from card |
+
+---
+
+## 7. Folder Structure
 
 ```
 cardie/
 ├── client/                        # React frontend (Vite)
-│   ├── public/
 │   ├── src/
-│   │   ├── components/            # Reusable UI components
-│   │   │   ├── CardFlip/          # Flashcard flip component
-│   │   │   ├── DeckCard/          # Deck preview card
-│   │   │   ├── CategoryBadge/     # Colored category label
-│   │   │   ├── Modal/             # Confirmation/form modals
-│   │   │   ├── Toast/             # Notification toasts
-│   │   │   ├── Skeleton/          # Loading skeletons
-│   │   │   ├── Editor/            # TipTap rich text editor wrapper
-│   │   │   └── Navbar/            # Top navigation with search + dark mode
-│   │   ├── pages/                 # Page-level components (React Router views)
-│   │   │   ├── Home.jsx           # Category/deck browse view
-│   │   │   ├── DeckView.jsx       # Cards within a deck + study button
-│   │   │   ├── StudyMode.jsx      # Full study session view
-│   │   │   └── Dashboard.jsx      # Progress stats for a deck
-│   │   ├── hooks/                 # Custom React hooks
-│   │   │   ├── useDecks.js
+│   │   ├── pages/
+│   │   │   ├── LoginPage.jsx          ← NEW
+│   │   │   ├── RegisterPage.jsx       ← NEW
+│   │   │   ├── ProfilePage.jsx        ← NEW
+│   │   │   ├── AdminPage.jsx          ← NEW
+│   │   │   ├── HowItWorksPage.jsx     ← NEW
+│   │   │   ├── HomePage.jsx
+│   │   │   ├── DecksPage.jsx
+│   │   │   ├── DeckDetailPage.jsx
+│   │   │   └── StudyPage.jsx
+│   │   ├── components/
+│   │   │   ├── editor/
+│   │   │   │   ├── CardEditor.jsx     ← NEW: TipTap editor component
+│   │   │   │   └── CardDisplay.jsx    ← NEW: TipTap read-only renderer
+│   │   │   ├── onboarding/
+│   │   │   │   └── OnboardingTour.jsx ← NEW
+│   │   │   ├── tags/
+│   │   │   │   ├── TagInput.jsx       ← NEW
+│   │   │   │   └── TagChip.jsx        ← NEW
+│   │   │   ├── deck/
+│   │   │   │   ├── DeckStyleEditor.jsx ← NEW
+│   │   │   │   └── CoverPicker.jsx    ← NEW
+│   │   │   └── ui/                   # Shared: Modal, Toast, Skeleton, Tooltip
+│   │   ├── hooks/
+│   │   │   ├── useStudySession.js
 │   │   │   ├── useCards.js
-│   │   │   └── useStudySession.js # Session queue logic lives here
-│   │   ├── services/              # API call functions (fetch wrappers)
-│   │   │   ├── api.js             # Base fetch config
+│   │   │   └── useDashboard.js        ← NEW: dashboard data fetching
+│   │   ├── services/
+│   │   │   ├── api.js                 # Base fetch config + JWT header injection
+│   │   │   ├── authService.js         ← NEW
+│   │   │   ├── userService.js         ← NEW
+│   │   │   ├── tagService.js          ← NEW
 │   │   │   ├── categoryService.js
 │   │   │   ├── deckService.js
 │   │   │   ├── cardService.js
 │   │   │   └── sessionService.js
-│   │   ├── context/               # React Context
-│   │   │   └── ThemeContext.jsx   # Dark mode state
-│   │   ├── App.jsx                # Router setup
-│   │   └── main.jsx               # Entry point
-│   ├── index.html                 # Single HTML file — SPA entry point
+│   │   ├── context/
+│   │   │   ├── ThemeContext.jsx        # Updated: syncs with user.theme_preference
+│   │   │   └── AuthContext.jsx        ← NEW: stores JWT + user info + role
+│   │   ├── App.jsx                    # Router setup + protected route wrapper
+│   │   └── main.jsx
+│   ├── index.html
 │   └── package.json
 │
 ├── server/                        # FastAPI backend
 │   ├── routers/
+│   │   ├── auth.py                ← NEW
+│   │   ├── users.py               ← NEW
+│   │   ├── tags.py                ← NEW
 │   │   ├── categories.py
 │   │   ├── decks.py
 │   │   ├── cards.py
 │   │   ├── sessions.py
 │   │   └── search.py
-│   ├── controllers/               # Business logic separated from routes
+│   ├── controllers/
+│   │   ├── auth_controller.py     ← NEW
+│   │   ├── user_controller.py     ← NEW
+│   │   ├── tag_controller.py      ← NEW
 │   │   ├── category_controller.py
 │   │   ├── deck_controller.py
 │   │   ├── card_controller.py
 │   │   ├── session_controller.py
 │   │   └── search_controller.py
 │   ├── middleware/
-│   │   └── error_handler.py       # Global error handler
+│   │   ├── error_handler.py
+│   │   └── auth.py                ← NEW: get_current_user dependency
+│   ├── utils/
+│   │   └── security.py            ← NEW: bcrypt helpers + JWT encode/decode
 │   ├── db/
-│   │   └── connection.py          # mysql-connector-python connection pool
-│   ├── uploads/                   # Image files saved here
-│   ├── main.py                    # FastAPI app entry point
-│   └── requirements.txt           # Python dependencies
+│   │   └── connection.py
+│   ├── uploads/
+│   │   └── covers/                ← deck cover images stored here
+│   ├── main.py
+│   └── requirements.txt
 │
 ├── database/
-│   ├── schema.sql                 # Full CREATE TABLE statements
-│   └── seed.sql                   # Sample data for demo/testing
+│   ├── schema.sql                 # Full CREATE TABLE statements (A2 version)
+│   └── seed.sql                   # Includes one seeded admin account
 │
-├── .env.example                   # Template for environment variables
-├── .gitignore                     # Excludes node_modules, __pycache__, .env, uploads/*
-├── README.md                      # Assignment submission README
+├── .env.example
+├── .gitignore
+├── README.md
 └── CLAUDE.md                      # This file
 ```
 
 ---
 
-## 7. Environment Variables
+## 8. Environment Variables
 
 Create a `.env` file in `/server` based on `.env.example`:
 
@@ -333,11 +427,11 @@ DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=yourpassword
 DB_NAME=cardie
+JWT_SECRET=your_long_random_secret_here
+JWT_EXPIRE_MINUTES=1440
 ```
 
-The React frontend runs on port `5173` (Vite default).
-The FastAPI backend runs on port `8000` (uvicorn default).
-Vite is configured to proxy `/api` requests to `http://localhost:8000`.
+**Never hardcode credentials. Never commit `.env`.**
 
 ### Backend Dependencies (`server/requirements.txt`)
 ```
@@ -346,132 +440,89 @@ uvicorn[standard]
 mysql-connector-python
 python-multipart
 python-dotenv
+python-jose[cryptography]
+passlib[bcrypt]
 ```
 
-Install with:
+### Running the App
 ```bash
-pip install -r requirements.txt
-```
-
-### Running the Backend
-```bash
+# Backend
 cd server
 uvicorn main:app --reload
-# FastAPI running on http://localhost:8000
-# Interactive API docs at http://localhost:8000/docs
+# http://localhost:8000 | Swagger docs: http://localhost:8000/docs
+
+# Frontend
+cd client
+npm install
+npm run dev
+# http://localhost:5173
 ```
 
 ---
 
-## 8. Study Session Queue Logic
+## 9. Study Session Queue Logic (unchanged from A1)
 
-This logic lives entirely in `useStudySession.js` (frontend). No backend involvement mid-session.
+Lives entirely in `useStudySession.js`. No backend involvement mid-session.
 
 ```
 sessionQueue = [...allCardsInDeck]  // optionally shuffled
 
 onRate(card, rating):
-  if rating === 'easy':
-    remove card from queue
-    increment local easyCount
-  if rating === 'hard':
-    reinsert card at position (currentIndex + 3) in queue
-    increment local hardCount
-  if rating === 'missed':
-    reinsert card at position (currentIndex + 1) in queue
-    increment local missedCount
-  
-  advance to next card in queue
-  update live stats: accuracy = easyCount / totalRated * 100
+  easy   → remove from queue; increment easyCount
+  hard   → reinsert at currentIndex + 3; increment hardCount
+  missed → reinsert at currentIndex + 1; increment missedCount
+  advance to next card; update accuracy = easyCount / totalRated * 100
 
 onSessionEnd:
-  POST /api/sessions with { deckId, easyCount, hardCount, missedCount, totalCards, accuracy }
-  Backend updates study_sessions table
-  Backend increments ease_count/hard_count/missed_count on each affected flashcard
+  POST /api/sessions { deckId, easyCount, hardCount, missedCount, totalCards, accuracy }
+  Backend: insert into study_sessions; increment ease/hard/missed counts on flashcards
 ```
 
 ---
 
-## 9. UI/UX Design Direction
+## 10. UI/UX Design Direction
 
 **Aesthetic:** Clean, modern, slightly playful — like a polished student productivity tool. Think Notion meets Anki.
 
 **Color Palette (light mode):**
-- Background: `#f8f9fa`
-- Surface: `#ffffff`
-- Primary: `#6366f1` (indigo)
-- Accent: `#f59e0b` (amber)
-- Text: `#1a1a2e`
-- Border: `#e2e8f0`
+- Background: `#f8f9fa` | Surface: `#ffffff` | Primary: `#6366f1` | Accent: `#f59e0b`
+- Text: `#1a1a2e` | Border: `#e2e8f0`
 
 **Color Palette (dark mode):**
-- Background: `#0f0f1a`
-- Surface: `#1a1a2e`
-- Primary: `#818cf8`
-- Text: `#e2e8f0`
-- Border: `#2d2d44`
+- Background: `#0f0f1a` | Surface: `#1a1a2e` | Primary: `#818cf8`
+- Text: `#e2e8f0` | Border: `#2d2d44`
 
-**Typography:**
-- Headings: `Syne` or `DM Serif Display` (Google Fonts)
-- Body: `DM Sans` or `Plus Jakarta Sans`
+**Typography:** Headings: `Syne` or `DM Serif Display`. Body: `DM Sans` or `Plus Jakarta Sans`.
 
-**Key Animations:**
-- Card flip: CSS `rotateY(180deg)` with `transform-style: preserve-3d`
-- Page transitions: subtle fade-in on route change
-- Toast notifications: slide in from bottom-right
-- Modals: scale up from center with backdrop blur
-- Skeleton loaders: pulsing gradient shimmer
+**Key Animations:** Card flip (rotateY), page fade-in, toast slide-in, modal scale-up, skeleton shimmer.
 
-**Mobile Responsiveness:**
-- Single column layout on mobile
-- Study mode works fully on touch (tap to flip)
-- Navigation collapses to bottom tab bar on mobile
+**Mobile:** Single column, bottom tab nav, study mode works on touch.
 
 ---
 
-## 10. Code Quality Standards
+## 11. Code Quality Standards
 
-- **Naming:** 
-  - Python: `snake_case` for all variables, functions, and file names
-  - React/JS: camelCase for variables/functions, PascalCase for components
-  - Database: `snake_case` for all column and table names
-- **Comments:** Add a comment above any non-obvious logic block (especially the session queue reordering)
-- **Error handling:**
-  - All API routes wrapped in try/catch with meaningful error messages
-  - Frontend shows toast error if any API call fails
-  - App never shows a blank screen on API failure — always show an error state
-- **Input validation:**
-  - Backend validates required fields before DB insert
-  - Frontend disables submit buttons on empty required fields
-- **No console.log left in production code** — use proper error handling
-- **Consistent async/await** — no mixing with .then() chains
-
----
-
-## 11. README Requirements (Assignment Rubric)
-
-The README.md must include all six of these sections to get full marks:
-
-1. **Project title** — Cardie
-2. **Problem summary** — what problem this app solves (2-3 sentences)
-3. **Tech stack** — frontend, styling, routing, backend, database, file storage, deployment
-4. **Feature list** — bullet points of all features
-5. **Folder structure** — explained briefly
-6. **Challenges overcome** — 4-5 sentences about real challenges faced during development
+- **Naming:** Python → snake_case; React/JS → camelCase (functions/vars), PascalCase (components); DB → snake_case
+- **Comments:** Above any non-obvious logic (especially queue reordering, JWT middleware, bootstrap admin check)
+- **Error handling:** All routes wrapped in try/catch; frontend toasts on API failure; no blank screen ever
+- **Input validation:** Backend validates required fields before DB insert; frontend disables submit on empty required fields
+- **No `console.log`** left in production code
+- **Consistent async/await** — no mixing with `.then()` chains
+- **No `SELECT *`** — specify columns explicitly in all queries
+- **No Base64 images** in the database
 
 ---
 
 ## 12. Things to Avoid
 
-- ❌ No authentication / login system
-- ❌ No cloud storage (Cloudinary, AWS S3) — use local python-multipart only
-- ❌ No Redux — React Context + useState is sufficient
-- ❌ No SQLAlchemy ORM — use raw SQL with mysql-connector-python
+- ❌ No cloud storage — python-multipart local uploads only
+- ❌ No Redux — React Context + useState only
+- ❌ No SQLAlchemy ORM — raw SQL only
+- ❌ No multiple HTML files
+- ❌ No hardcoded credentials or JWT secrets
+- ❌ No `print()` statements in final Python code
 - ❌ No full SM-2 spaced repetition algorithm — session-based queue only
-- ❌ No multiple HTML files — React Router handles all navigation in one SPA
-- ❌ No `print()` statements left in final Python code — use proper error handling
-- ❌ Do not store images as Base64 in the database
-- ❌ Do not use `SELECT *` in production queries — specify columns explicitly
+- ❌ No TipTap paid/cloud extensions
 
 ---
 
@@ -479,12 +530,13 @@ The README.md must include all six of these sections to get full marks:
 
 When making any design or implementation decision, prioritise in this order:
 
-1. **Does it work correctly?** — CRUD operations must be reliable
-2. **Is the UX seamless?** — No unnecessary steps, good feedback, smooth transitions
-3. **Is the code clean and organised?** — Folder structure, naming, error handling
-4. **Does it look professional?** — Visual polish, responsiveness, dark mode
-5. **Is it a true SPA?** — No full page reloads, React Router for navigation
+1. **Does it work correctly?** — CRUD + auth must be reliable
+2. **Is auth secure?** — JWT, bcrypt, role checks on every protected endpoint
+3. **Is the UX seamless?** — No unnecessary steps, good feedback, onboarding guidance
+4. **Is the code clean?** — Naming, error handling, no dead code
+5. **Does it look professional?** — Visual polish, responsiveness, dark mode
+6. **Is it a true SPA?** — No full page reloads
 
 ---
 
-*Last updated: Project planning phase. App name: Cardie. Stack: React + Python/FastAPI + MySQL.*
+*Last updated: A2 planning phase. App: Cardie. Stack: React + FastAPI + MySQL. Solo submission.*

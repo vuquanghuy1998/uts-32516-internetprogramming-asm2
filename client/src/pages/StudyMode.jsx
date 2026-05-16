@@ -16,6 +16,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getCards } from '../services/cardService'
+import { getDeck } from '../services/deckService'
 import { saveSession } from '../services/sessionService'
 import { useStudySession } from '../hooks/useStudySession'
 import CardFlip from '../components/CardFlip/CardFlip'
@@ -30,6 +31,7 @@ export default function StudyMode() {
   const { deckId } = useParams()
   const navigate = useNavigate()
   const [cards, setCards] = useState([])
+  const [deck, setDeck] = useState(null)
 
   // Whether the user has opted to randomise card order before starting.
   const [shuffled, setShuffled] = useState(false)
@@ -42,10 +44,9 @@ export default function StudyMode() {
 
   useEffect(() => { document.title = 'Study Session — Cardie' }, [])
 
-  // Fetch all cards for this deck so their count can be shown on the setup
-  // screen and the session queue can be built when the user starts.
   useEffect(() => {
     getCards(deckId).then(setCards).catch(() => showToast('Failed to load cards', 'error'))
+    getDeck(deckId).then(setDeck).catch(() => {})
   }, [deckId])
 
   // Pass an empty array before the session starts so the hook initialises
@@ -184,7 +185,7 @@ export default function StudyMode() {
       {/* Render the flippable card for the current queue position. Also prevents
           undefined value in case the queue transitions to empty between renders. */}
       {session.currentCard && (
-        <CardFlip card={session.currentCard} isFlipped={session.isFlipped} onFlip={session.flip} />
+        <CardFlip card={session.currentCard} isFlipped={session.isFlipped} onFlip={session.flip} deckStyle={deck} />
       )}
 
       {/* Rating buttons appear only after the card has been flipped to show the

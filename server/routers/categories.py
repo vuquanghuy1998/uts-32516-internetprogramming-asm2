@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
+from middleware.auth import get_current_user
 from controllers import category_controller
 
 router = APIRouter(prefix="/categories", tags=["categories"])
@@ -12,7 +13,7 @@ class CategoryBody(BaseModel):
 
 
 @router.get("")
-def list_categories():
+def list_categories(_user: dict = Depends(get_current_user)):
     try:
         return category_controller.get_all_categories()
     except Exception as e:
@@ -20,7 +21,7 @@ def list_categories():
 
 
 @router.post("", status_code=201)
-def create_category(body: CategoryBody):
+def create_category(body: CategoryBody, _user: dict = Depends(get_current_user)):
     if not body.name.strip():
         raise HTTPException(status_code=400, detail="Name is required")
     try:
@@ -30,7 +31,7 @@ def create_category(body: CategoryBody):
 
 
 @router.put("/{category_id}")
-def update_category(category_id: int, body: CategoryBody):
+def update_category(category_id: int, body: CategoryBody, _user: dict = Depends(get_current_user)):
     if not body.name.strip():
         raise HTTPException(status_code=400, detail="Name is required")
     try:
@@ -45,7 +46,7 @@ def update_category(category_id: int, body: CategoryBody):
 
 
 @router.delete("/{category_id}", status_code=204)
-def delete_category(category_id: int):
+def delete_category(category_id: int, _user: dict = Depends(get_current_user)):
     try:
         category_controller.delete_category(category_id)
     except Exception as e:
