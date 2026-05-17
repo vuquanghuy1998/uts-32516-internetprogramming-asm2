@@ -40,6 +40,8 @@ def register_user(username: str, email: str, password: str, full_name: str = "")
             (user_id,),
         )
         user = cursor.fetchone()
+        user["is_active"] = bool(user["is_active"])
+        user["has_completed_onboarding"] = bool(user["has_completed_onboarding"])
         token = create_token({"id": user["id"], "username": user["username"], "role": user["role"]})
         return {"token": token, "user": user}
     finally:
@@ -68,6 +70,8 @@ def login_user(identifier: str, password: str) -> dict:
         conn.commit()
 
         del user["password_hash"]
+        user["is_active"] = bool(user["is_active"])
+        user["has_completed_onboarding"] = bool(user["has_completed_onboarding"])
         token = create_token({"id": user["id"], "username": user["username"], "role": user["role"]})
         return {"token": token, "user": user}
     finally:

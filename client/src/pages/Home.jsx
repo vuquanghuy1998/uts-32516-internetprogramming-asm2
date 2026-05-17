@@ -37,7 +37,7 @@ export default function Home() {
 
   // Show onboarding tour for new users
   useEffect(() => {
-    if (user && user.has_completed_onboarding === false) {
+    if (user && !user.has_completed_onboarding) {
       setShowTour(true)
     }
   }, [user])
