@@ -1465,9 +1465,23 @@ img { max-width: 100%; display: block; }
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
-.deck-cover-icon { font-size: 2rem; }
+/* Dark overlay so hardcoded light pastel backgrounds don't clash with dark theme */
+[data-theme="dark"] .preset-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.52);
+  pointer-events: none;
+}
+
+.deck-cover-icon {
+  font-size: 2rem;
+  position: relative;
+  z-index: 1;
+}
 
 /* ── Cover picker ──────────────────────────────────────────── */
 .cover-picker { margin-top: 4px; }
@@ -1490,10 +1504,25 @@ img { max-width: 100%; display: block; }
   font-size: 1.4rem;
   cursor: pointer;
   transition: border-color 0.15s, transform 0.1s;
+  position: relative;
+  overflow: hidden;
 }
 .cover-preset:hover { transform: scale(1.1); }
 .cover-preset.selected { border-color: var(--primary); }
 .cover-upload-btn { background: var(--surface); border-color: var(--border); font-size: 1.2rem; }
+
+/* Darken preset swatches in dark mode to match theme */
+[data-theme="dark"] .cover-preset:not(.cover-upload-btn)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+[data-theme="dark"] .cover-preset .cover-preset-icon {
+  position: relative;
+  z-index: 1;
+}
 
 /* ── Deck style editor ─────────────────────────────────────── */
 .style-editor {

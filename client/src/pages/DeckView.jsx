@@ -11,7 +11,11 @@ import Modal from '../components/Modal/Modal'
 import { SkeletonCard } from '../components/Skeleton/Skeleton'
 import { showToast } from '../components/Toast/Toast'
 
-// Derive card-face CSS from deck style fields
+const STYLE_DEFAULTS = { bg: '#ffffff', text: '#1a1a2e' }
+
+// Derive card-face CSS from deck style fields.
+// Fall back to CSS variables for colours that match the light-mode defaults so
+// dark mode is respected for decks that were never given a custom colour.
 function cardStyle(deck) {
   if (!deck) return {}
   const fontMap = {
@@ -20,10 +24,12 @@ function cardStyle(deck) {
     mono: 'monospace',
     decorative: '"Syne", sans-serif',
   }
+  const bg   = deck.style_bg_color
+  const text = deck.style_text_color
   return {
-    background: deck.style_bg_color || '#ffffff',
-    color: deck.style_text_color || '#1a1a2e',
-    fontSize: deck.style_font_size === 'small' ? '0.85rem' : deck.style_font_size === 'large' ? '1.1rem' : '1rem',
+    background: (bg   && bg   !== STYLE_DEFAULTS.bg)   ? bg   : 'var(--surface)',
+    color:      (text && text !== STYLE_DEFAULTS.text)  ? text : 'var(--text)',
+    fontSize:   deck.style_font_size === 'small' ? '0.85rem' : deck.style_font_size === 'large' ? '1.1rem' : '1rem',
     fontFamily: fontMap[deck.style_font_family] || 'inherit',
     borderRadius: deck.style_border_style === 'rounded' ? 10 : deck.style_border_style === 'none' ? 0 : 2,
   }
