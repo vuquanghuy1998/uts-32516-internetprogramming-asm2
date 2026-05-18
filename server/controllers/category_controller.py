@@ -44,11 +44,11 @@ def update_category(category_id: int, user_id: int, name: str, color: str, descr
             (name, color, description, category_id, user_id),
         )
         conn.commit()
-        if cursor.rowcount == 0:
-            return None
+        # Always fetch after UPDATE — MySQL rowcount is 0 when data is unchanged,
+        # which is not an error. Only return None if the row truly doesn't exist.
         cursor.execute(
-            "SELECT id, user_id, name, color, description, created_at FROM categories WHERE id = %s",
-            (category_id,),
+            "SELECT id, user_id, name, color, description, created_at FROM categories WHERE id = %s AND user_id = %s",
+            (category_id, user_id),
         )
         return cursor.fetchone()
     finally:
