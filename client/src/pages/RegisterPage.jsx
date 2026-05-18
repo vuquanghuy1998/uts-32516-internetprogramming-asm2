@@ -76,7 +76,7 @@ export default function RegisterPage() {
         }
 
         <form onSubmit={handleSubmit} className="auth-form">
-          {field('username', 'Username *', 'text', 'e.g. john_doe')}
+          {field('username', 'Username *', 'text', 'e.g. Taylor Swift')}
           {field('email', 'Email *', 'email', 'you@example.com')}
           {field('fullName', 'Full Name (optional)', 'text', 'Your display name')}
           {field('password', 'Password *', 'password', '6+ characters')}

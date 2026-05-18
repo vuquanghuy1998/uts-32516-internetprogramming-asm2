@@ -7,7 +7,7 @@ import Modal from '../components/Modal/Modal'
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuth()
-  const { darkMode, toggleDarkMode } = useTheme()
+  const { theme, setTheme } = useTheme()
 
   const [form, setForm] = useState({
     full_name: user?.full_name || '',
@@ -62,8 +62,7 @@ export default function ProfilePage() {
   }
 
   const handleThemeChange = async (pref) => {
-    if (pref === 'dark' && !darkMode) toggleDarkMode()
-    if (pref === 'light' && darkMode) toggleDarkMode()
+    setTheme(pref)
     try {
       const updated = await updateMe({ theme_preference: pref })
       updateUser(updated)
@@ -159,7 +158,7 @@ export default function ProfilePage() {
             {['light', 'dark', 'system'].map(t => (
               <button
                 key={t}
-                className={`theme-option-btn ${(t === 'dark' ? darkMode : t === 'light' ? !darkMode : false) ? 'active' : ''}`}
+                className={`theme-option-btn ${theme === t ? 'active' : ''}`}
                 onClick={() => handleThemeChange(t)}
               >
                 {t === 'light' ? '☀️ Light' : t === 'dark' ? '🌙 Dark' : '💻 System'}

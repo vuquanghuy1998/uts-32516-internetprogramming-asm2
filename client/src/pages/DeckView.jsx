@@ -10,6 +10,7 @@ import TagChip from '../components/tags/TagChip'
 import Modal from '../components/Modal/Modal'
 import { SkeletonCard } from '../components/Skeleton/Skeleton'
 import { showToast } from '../components/Toast/Toast'
+import { DeckCoverDisplay } from '../components/deck/CoverPicker'
 
 const STYLE_DEFAULTS = { bg: '#ffffff', text: '#1a1a2e' }
 
@@ -105,6 +106,11 @@ export default function DeckView() {
 
   return (
     <div className="page">
+      {deck && (
+        <div className="deck-banner">
+          <DeckCoverDisplay deck={deck} />
+        </div>
+      )}
       <div className="page-header">
         <div>
           <Link to="/decks" className="breadcrumb">← Decks</Link>

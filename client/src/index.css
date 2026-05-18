@@ -78,6 +78,19 @@ img { max-width: 100%; display: block; }
 
 .page { padding-top: 28px; }
 
+/* ── Deck banner (full-bleed narrow cover strip) ───────────── */
+.deck-banner {
+  /* Break out of .main-content padding (24px) and .page top padding (28px) */
+  margin: -28px -24px 24px;
+  height: 150px;
+  overflow: hidden;
+  border-radius: 0;
+}
+
+.deck-banner .deck-cover-icon {
+  font-size: 3.5rem;
+}
+
 .page-header {
   display: flex;
   align-items: flex-start;
