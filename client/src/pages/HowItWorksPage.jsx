@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 const STEPS = [
   {
@@ -25,6 +26,7 @@ const STEPS = [
 ]
 
 export default function HowItWorksPage() {
+  const { user } = useAuth()
   useEffect(() => { document.title = 'How It Works — Cardie' }, [])
 
   return (
@@ -73,7 +75,7 @@ export default function HowItWorksPage() {
 
       <div className="how-cta">
         <Link to="/decks" className="btn btn-primary btn-lg">Go to My Decks</Link>
-        <Link to="/register" className="btn btn-secondary btn-lg">Create Account</Link>
+        {!user && <Link to="/register" className="btn btn-secondary btn-lg">Create Account</Link>}
       </div>
     </div>
   )
