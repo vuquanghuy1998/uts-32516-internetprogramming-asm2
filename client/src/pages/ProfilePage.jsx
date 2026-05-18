@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { updateMe, changePassword } from '../services/userService'
+import { updateMe, changePassword, uploadAvatar } from '../services/userService'
 import { showToast } from '../components/Toast/Toast'
 import Modal from '../components/Modal/Modal'
 
@@ -14,9 +14,10 @@ export default function ProfilePage() {
     username: user?.username || '',
     email: user?.email || '',
     bio: user?.bio || '',
-    avatar_url: user?.avatar_url || '',
   })
   const [saving, setSaving] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const avatarFileRef = useRef(null)
 
   const [showPwModal, setShowPwModal] = useState(false)
   const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' })
@@ -33,7 +34,6 @@ export default function ProfilePage() {
         username: form.username,
         email: form.email,
         bio: form.bio,
-        avatar_url: form.avatar_url,
       })
       updateUser(updated)
       showToast('Profile saved')
@@ -42,6 +42,22 @@ export default function ProfilePage() {
       showToast(msg, 'error')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setAvatarUploading(true)
+    try {
+      const { avatar_url } = await uploadAvatar(file)
+      updateUser({ avatar_url })
+      showToast('Avatar updated')
+    } catch {
+      showToast('Failed to upload avatar', 'error')
+    } finally {
+      setAvatarUploading(false)
+      e.target.value = ''
     }
   }
 
@@ -86,15 +102,35 @@ export default function ProfilePage() {
         <div className="dashboard-card">
           <h2>Account Details</h2>
 
-          {form.avatar_url && (
-            <img src={form.avatar_url.startsWith('uploads/') ? `/api/${form.avatar_url}` : form.avatar_url}
-              alt="avatar" className="avatar-preview" />
-          )}
-
-          <label className="form-label">Avatar URL</label>
-          <input className="form-input" value={form.avatar_url}
-            placeholder="https://example.com/photo.jpg"
-            onChange={e => setForm(f => ({ ...f, avatar_url: e.target.value }))} />
+          <div className="avatar-upload-row">
+            {user?.avatar_url ? (
+              <img
+                src={user.avatar_url.startsWith('uploads/') ? `/api/${user.avatar_url}` : user.avatar_url}
+                alt="avatar"
+                className="avatar-preview"
+              />
+            ) : (
+              <div className="avatar-placeholder">{user?.username?.[0]?.toUpperCase() ?? '?'}</div>
+            )}
+            <div>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => avatarFileRef.current?.click()}
+                disabled={avatarUploading}
+              >
+                {avatarUploading ? 'Uploading…' : '📷 Upload Profile Photo…'}
+              </button>
+              <p className="form-hint" style={{ marginTop: 6 }}>JPG, PNG or GIF · Max 5 MB</p>
+            </div>
+          </div>
+          <input
+            ref={avatarFileRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleAvatarChange}
+          />
 
           <label className="form-label">Full Name</label>
           <input className="form-input" value={form.full_name}

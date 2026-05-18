@@ -75,6 +75,12 @@ def change_password(body: PasswordChange, user: dict = Depends(get_current_user)
 
 @router.post("/me/avatar")
 async def upload_avatar(image: UploadFile = File(...), user: dict = Depends(get_current_user)):
+    if not image.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    contents = await image.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image must be under 5 MB")
+    await image.seek(0)
     try:
         path = user_controller.save_avatar(image, user["id"])
         user_controller.update_user(user["id"], {"avatar_url": path})
