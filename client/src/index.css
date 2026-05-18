@@ -1510,7 +1510,8 @@ img { max-width: 100%; display: block; }
 }
 .cover-preset:hover { transform: scale(1.1); }
 .cover-preset.selected { border-color: var(--primary); }
-.cover-upload-btn { background: var(--surface); border-color: var(--border); font-size: 1.2rem; }
+.cover-upload-btn { margin-top: 10px; font-size: 0.875rem; }
+.cover-upload-btn--active { border-color: var(--primary); color: var(--primary); }
 
 /* Darken preset swatches in dark mode to match theme */
 [data-theme="dark"] .cover-preset:not(.cover-upload-btn)::after {

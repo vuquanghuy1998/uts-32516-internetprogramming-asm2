@@ -35,15 +35,14 @@ export default function CoverPicker({ value, onChange }) {
             <span className="cover-preset-icon">{p.label}</span>
           </button>
         ))}
-        <button
-          type="button"
-          className={`cover-preset cover-upload-btn ${value && !value.startsWith('preset:') ? 'selected' : ''}`}
-          onClick={() => fileRef.current?.click()}
-          title="Upload custom image"
-        >
-          📁
-        </button>
       </div>
+      <button
+        type="button"
+        className={`btn btn-secondary cover-upload-btn ${value && !value.startsWith('preset:') ? 'cover-upload-btn--active' : ''}`}
+        onClick={() => fileRef.current?.click()}
+      >
+        📎 Upload Custom Cover Image…
+      </button>
       <input
         ref={fileRef}
         type="file"
